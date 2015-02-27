@@ -47,8 +47,8 @@ class RouterHandler(tornado.web.RequestHandler):
         self.security()
         
     def on_response(self, response):
-        self.pool.remove()
-        #self.write("on_getuserinfo error:%s"%(response.body,))
+        self.pool.remove(self.hash_request())
+        self.write(response.body)
         self.finish()
     
     
@@ -58,7 +58,7 @@ class RouterHandler(tornado.web.RequestHandler):
         if len(self.pool) <= self.threshold:
             self.client.fetch(self.request,self.on_response)
         else:
-            pass
+            self.redis_client
             
     @tornado.web.asynchronous
     def post(self):
@@ -67,7 +67,7 @@ class RouterHandler(tornado.web.RequestHandler):
         
     def filter_url(self, url):
         if isinstance(url,basestring):
-            url.replace()
+            return url.replace(host_server,app_servers)
         else:
             return url
     
@@ -78,12 +78,9 @@ class RouterHandler(tornado.web.RequestHandler):
     
     def hash_request(self):
         if not self.hash_request:
-            return hashlib.md5().update(pickle.dump(self.request)).hexdigest()
-        
-        
-    
-    
-    
+            self.hash_request = hashlib.md5().update(pickle.dump(self.request)).hexdigest()
+        return self.hash_request
+
 
 
 if __name__ == "__main__":
