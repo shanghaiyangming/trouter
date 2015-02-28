@@ -53,7 +53,8 @@ class RouterHandler(tornado.web.RequestHandler):
         self.security()
         
     def on_response(self, response):
-        self.pool.remove(self.hash_request())
+        if self.hash_request() in self.pool:
+            self.pool.remove(self.hash_request())
         if not response.error:
             self.write(response.body)
             self.finish()
@@ -63,15 +64,16 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
-        self.pool.remove(self.hash_request())
+        if self.hash_request() in self.pool:
+            self.pool.remove(self.hash_request())
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
     
     @tornado.web.asynchronous
-    def get(self):
+    def get(self,params):
         self.router()
             
     @tornado.web.asynchronous
-    def post(self):
+    def post(self,params):
         self.router()
         
     """对来访请求进行转发处理"""
@@ -84,7 +86,8 @@ class RouterHandler(tornado.web.RequestHandler):
             self.write('{"err":"The maximum number of connections limit is reached"}')
             self.finish()
         
-        self.request.url = self.filter_url(self.request.url)
+        #print self.request
+        self.request.host = self.filter_url(self.request.host)
         self.pool.append(self.hash_request())
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
@@ -111,7 +114,8 @@ class RouterHandler(tornado.web.RequestHandler):
         
     def filter_url(self, url):
         if isinstance(url,basestring):
-            return url.replace(host,str(random_list(app_servers)))
+            print app_servers
+            return url.replace(host_server,str(random_list(app_servers)))
         else:
             return url
     
