@@ -92,9 +92,9 @@ class RouterHandler(tornado.web.RequestHandler):
         self.pool.append(self.hash_request())
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
-        app_servers = self.get_query_argument('__APP_SERVERS__',default=False)
-        if app_servers:
-            app_servers.split(',')
+        custom_app_servers = self.get_query_argument('__APP_SERVERS__',default=False)
+        if custom_app_servers:
+            app_servers = custom_app_servers.split(',')
             
         
         #未来考虑增加过滤功能
@@ -119,7 +119,6 @@ class RouterHandler(tornado.web.RequestHandler):
         
     def filter_url(self, url):
         if isinstance(url,basestring):
-            app_servers = ['127.0.0.1:9999']
             return url.replace(host_server,str(random_list(app_servers)))
         else:
             return url
