@@ -28,9 +28,9 @@ from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
 
-from ..libs.common import ComplexEncoder
-from ..conf.redis import redis_client
-from ..conf.log import logging
+from libs.common import ComplexEncoder
+from conf.redis_conn import redis_client
+from conf.log import logging
 
 threshold = 500
 conn_count = 0
@@ -70,7 +70,17 @@ class RouterHandler(tornado.web.RequestHandler):
     def router(self):
         self.request.url = self.filter_url(self.request.url)
         self.pool.append(self.hash_request())
-        nodelay = self.get_body_argument('__NODELAY__')
+        nodelay = self.get_query_argument('__NODELAY__',default=False)
+        block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
+        app_servers = self.get_query_argument('__APP_SERVERS__',default=False)
+        if app_servers:
+            app_servers.split(',')
+            
+        
+        if block_content:
+            block_list = block_content.split(',')
+            """未来考虑增加过滤功能"""
+        
         if nodelay:
             self.write('{"ok":1}')
             self.client.fetch(self.request,self.on_response)
@@ -113,6 +123,7 @@ if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
+    
 
 
 
