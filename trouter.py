@@ -74,6 +74,7 @@ class RouterHandler(tornado.web.RequestHandler):
         
         #如果达到处理上限，那么停止接受连接，返回信息结束
         if self.conn_count > max_conn:
+            self.set_status(500) 
             self.write('{"err":"The maximum number of connections limit is reached"}')
             self.finish()
         
@@ -101,7 +102,6 @@ class RouterHandler(tornado.web.RequestHandler):
                     break
         self.client.fetch(self.request,self.on_response)
         
-    
         
     def filter_url(self, url):
         if isinstance(url,basestring):
@@ -110,7 +110,7 @@ class RouterHandler(tornado.web.RequestHandler):
             return url
     
     
-    """"进行必要的安全检查,拦截有问题操作"""
+    #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
         pass
     
