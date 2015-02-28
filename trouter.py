@@ -35,8 +35,9 @@ from conf.log import logging
 
 max_conn = 10000
 domain_list = ['scrm.umaman.com']
-app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
-host = socket.gethostbyname(socket.gethostname())
+app_servers = ['10.0.0.10:9000','10.0.0.11:9000','10.0.0.12:9000','10.0.0.13:9000']
+host_port = 8000
+host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host,))
 
 class RouterHandler(tornado.web.RequestHandler):
@@ -123,7 +124,7 @@ class RouterHandler(tornado.web.RequestHandler):
 
 if __name__ == "__main__":
     from tornado.options import define, options
-    define("port", default=8000, help="run on the given port", type=int)
+    define("port", default=host_port, help="run on the given port", type=int)
     tornado.options.parse_command_line()
     app = tornado.web.Application([
         (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging))
