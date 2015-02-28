@@ -33,8 +33,7 @@ from libs.common import ComplexEncoder,random_list
 from conf.redis_conn import redis_client
 from conf.log import logging
 
-threshold = 500
-conn_count = 0
+max_conn = 10000
 domain_list = ['scrm.umaman.com']
 app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
 host = socket.gethostbyname(socket.gethostname())
@@ -43,10 +42,11 @@ logging.info("Host:%s"%(host,))
 class RouterHandler(tornado.web.RequestHandler):
     
     def initialize(self, redis_client,logging):
+        self.conn_count = 0
         self.redis_client = redis_client
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient()
-        self.threshold = 500
+        self.threshold = self.get_query_argument('__THRESHOLD__',default=500) 
         self.pool = []
         self.security()
         
@@ -70,6 +70,13 @@ class RouterHandler(tornado.web.RequestHandler):
         
     """对来访请求进行转发处理"""
     def router(self):
+        self.conn_count += 1
+        
+        #如果达到处理上限，那么停止接受连接，返回信息结束
+        if self.conn_count > max_conn:
+            self.write('{"err":"The maximum number of connections limit is reached"}')
+            self.finish()
+        
         self.request.url = self.filter_url(self.request.url)
         self.pool.append(self.hash_request())
         nodelay = self.get_query_argument('__NODELAY__',default=False)
@@ -79,7 +86,7 @@ class RouterHandler(tornado.web.RequestHandler):
             app_servers.split(',')
             
         
-        """未来考虑增加过滤功能"""
+        #未来考虑增加过滤功能
         if block_content:
             block_list = block_content.split(',')
         
