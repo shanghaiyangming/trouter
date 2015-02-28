@@ -19,9 +19,7 @@ class ComplexEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
         
 def random_list(some_list):
-    print some_list
     random.shuffle(some_list)
-    print some_list
     return some_list.pop()
         
 """

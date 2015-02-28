@@ -55,6 +55,7 @@ class RouterHandler(tornado.web.RequestHandler):
     def on_response(self, response):
         if self.hash_request() in self.pool:
             self.pool.remove(self.hash_request())
+            
         if not response.error:
             self.write(response.body)
             self.finish()
@@ -109,12 +110,16 @@ class RouterHandler(tornado.web.RequestHandler):
                     time.sleep(1)
                 else:
                     break
-        self.client.fetch(self.request,self.on_response)
-        
+        http_client = tornado.httpclient.HTTPClient()
+        #print self.request
+        response = http_client.fetch(self.request)
+        self.write(response.body)
+        self.finish()
+        #self.client.fetch(self.request,self.on_response)
         
     def filter_url(self, url):
         if isinstance(url,basestring):
-            print app_servers
+            app_servers = ['127.0.0.1:9999']
             return url.replace(host_server,str(random_list(app_servers)))
         else:
             return url
