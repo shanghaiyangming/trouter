@@ -117,7 +117,7 @@ class RouterHandler(tornado.web.RequestHandler):
     
     def hash_request(self):
         if not self.hash_request:
-            self.hash_request = obj_has(self.request)
+            self.hash_request = obj_hash(self.request)
         return self.hash_request
 
 
