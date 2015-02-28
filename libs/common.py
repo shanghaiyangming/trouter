@@ -4,6 +4,8 @@ import json
 import datetime
 import random
 import re
+import pickle
+import hashlib
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -30,4 +32,10 @@ dic = {
 """
 def multiple_replace(dic, text): 
     pattern = "|".join(map(re.escape, dic.keys()))
-    return re.sub(pattern, lambda m: dic[m.group()], text) 
+    return re.sub(pattern, lambda m: dic[m.group()], text)
+
+def obj_hash(obj):
+    return hashlib.md5(pickle.dump(obj)).hexdigest()
+
+    
+

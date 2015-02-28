@@ -29,7 +29,7 @@ from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
 
-from libs.common import ComplexEncoder,random_list
+from libs.common import ComplexEncoder,random_list,obj_hash
 from conf.redis_conn import redis_client
 from conf.log import logging
 
@@ -117,7 +117,7 @@ class RouterHandler(tornado.web.RequestHandler):
     
     def hash_request(self):
         if not self.hash_request:
-            self.hash_request = hashlib.md5().update(pickle.dump(self.request)).hexdigest()
+            self.hash_request = obj_has(self.request)
         return self.hash_request
 
 
