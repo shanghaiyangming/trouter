@@ -93,8 +93,10 @@ class RouterHandler(tornado.web.RequestHandler):
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
         custom_app_servers = self.get_query_argument('__APP_SERVERS__',default=False)
-        if custom_app_servers:
-            app_servers = custom_app_servers.split(',')
+        
+        if custom_app_servers!='':
+            print custom_app_servers
+            #app_servers = custom_app_servers.split(',')
             
         
         #未来考虑增加过滤功能
