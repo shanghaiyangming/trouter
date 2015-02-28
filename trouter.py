@@ -33,15 +33,15 @@ from libs.common import ComplexEncoder,random_list,obj_hash
 from conf.redis_conn import redis_client
 from conf.log import logging
 
+version = '0.0.1'
 max_conn = 10000
-domain_list = ['scrm.umaman.com']
-app_servers = ['10.0.0.10:9000','10.0.0.11:9000','10.0.0.12:9000','10.0.0.13:9000']
+#app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
+app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
 host_port = 8000
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
-logging.info("Host:%s"%(host,))
+logging.info("Host:%s:%s"%(host,host_port))
 
 class RouterHandler(tornado.web.RequestHandler):
-    
     def initialize(self, redis_client,logging):
         self.conn_count = 0
         self.redis_client = redis_client
@@ -60,6 +60,10 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.debug(u"%s,%s"%(response.error,response.body))
             self.finish()
     
+    #确保列队中的请求被删除，并添加处理header信息标记
+    def on_finish(self):
+        self.pool.remove(self.hash_request())
+        self.add_header('__PROXY__', 'Trouter %s'%(version,))
     
     @tornado.web.asynchronous
     def get(self):
