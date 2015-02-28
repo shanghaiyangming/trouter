@@ -36,10 +36,11 @@ from conf.log import logging
 version = '0.0.1'
 max_conn = 10000
 #app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
-app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
+app_servers = ['127.0.0.1:9999']
 host_port = 8000
+threshold = 500
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
-logging.info("Host:%s:%s"%(host,host_port))
+logging.info("Host:%s"%(host_server,))
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
@@ -47,7 +48,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.redis_client = redis_client
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient()
-        self.threshold = self.get_query_argument('__THRESHOLD__',default=500) 
+        self.threshold = threshold
         self.pool = []
         self.security()
         
