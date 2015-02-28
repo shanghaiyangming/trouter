@@ -54,16 +54,22 @@ class RouterHandler(tornado.web.RequestHandler):
     
     @tornado.web.asynchronous
     def get(self):
-        self.pool.append(self.hash_request())
-        if len(self.pool) <= self.threshold:
-            self.client.fetch(self.request,self.on_response)
-        else:
-            self.redis_client
+        self.router()
             
     @tornado.web.asynchronous
     def post(self):
+        self.router()
+        
+    def router(self):
         self.request.url = self.filter_url(self.request.url)
+        self.pool.append(self.hash_request())
+        while True:
+            if len(self.pool) > self.threshold:
+                time.sleep(1)
+            else:
+                break
         self.client.fetch(self.request,self.on_response)
+    
         
     def filter_url(self, url):
         if isinstance(url,basestring):
