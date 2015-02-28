@@ -22,13 +22,14 @@ import time
 import json
 import redis
 import pickle
+import socket
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
 
-from libs.common import ComplexEncoder
+from libs.common import ComplexEncoder,random_list
 from conf.redis_conn import redis_client
 from conf.log import logging
 
@@ -36,6 +37,8 @@ threshold = 500
 conn_count = 0
 domain_list = ['scrm.umaman.com']
 app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
+host = socket.gethostbyname(socket.gethostname())
+logging.info("Host:%s"%(host,))
 
 class RouterHandler(tornado.web.RequestHandler):
     
@@ -55,7 +58,6 @@ class RouterHandler(tornado.web.RequestHandler):
         else:
             self.logging.debug(u"%s,%s"%(response.error,response.body))
             self.finish()
-            
     
     
     @tornado.web.asynchronous
@@ -77,9 +79,9 @@ class RouterHandler(tornado.web.RequestHandler):
             app_servers.split(',')
             
         
+        """未来考虑增加过滤功能"""
         if block_content:
             block_list = block_content.split(',')
-            """未来考虑增加过滤功能"""
         
         if nodelay:
             self.write('{"ok":1}')
@@ -97,7 +99,7 @@ class RouterHandler(tornado.web.RequestHandler):
         
     def filter_url(self, url):
         if isinstance(url,basestring):
-            return url.replace(host_server,app_servers)
+            return url.replace(host,str(random_list(app_servers)))
         else:
             return url
     
