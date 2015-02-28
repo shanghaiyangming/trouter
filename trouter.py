@@ -92,7 +92,6 @@ class RouterHandler(tornado.web.RequestHandler):
         
         if nodelay:
             self.write('{"ok":1}')
-            self.client.fetch(self.request,self.on_response)
             self.finish()
         else:
             while True:
@@ -100,7 +99,7 @@ class RouterHandler(tornado.web.RequestHandler):
                     time.sleep(1)
                 else:
                     break
-            self.client.fetch(self.request,self.on_response)
+        self.client.fetch(self.request,self.on_response)
         
     
         
