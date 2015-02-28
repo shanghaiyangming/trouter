@@ -39,8 +39,9 @@ app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
 
 class RouterHandler(tornado.web.RequestHandler):
     
-    def initialize(self, redis_client):
+    def initialize(self, redis_client,logging):
         self.redis_client = redis_client
+        self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient()
         self.threshold = 500
         self.pool = []
@@ -48,8 +49,13 @@ class RouterHandler(tornado.web.RequestHandler):
         
     def on_response(self, response):
         self.pool.remove(self.hash_request())
-        self.write(response.body)
-        self.finish()
+        if not response.error:
+            self.write(response.body)
+            self.finish()
+        else:
+            self.logging.debug(u"%s,%s"%(response.error,response.body))
+            self.finish()
+            
     
     
     @tornado.web.asynchronous
@@ -60,15 +66,23 @@ class RouterHandler(tornado.web.RequestHandler):
     def post(self):
         self.router()
         
+    """对来访请求进行转发处理"""
     def router(self):
         self.request.url = self.filter_url(self.request.url)
         self.pool.append(self.hash_request())
-        while True:
-            if len(self.pool) > self.threshold:
-                time.sleep(1)
-            else:
-                break
-        self.client.fetch(self.request,self.on_response)
+        nodelay = self.get_body_argument('__NODELAY__')
+        if nodelay:
+            self.write('{"ok":1}')
+            self.client.fetch(self.request,self.on_response)
+            self.finish()
+        else:
+            while True:
+                if len(self.pool) > self.threshold:
+                    time.sleep(1)
+                else:
+                    break
+            self.client.fetch(self.request,self.on_response)
+        
     
         
     def filter_url(self, url):
@@ -94,7 +108,7 @@ if __name__ == "__main__":
     define("port", default=8000, help="run on the given port", type=int)
     tornado.options.parse_command_line()
     app = tornado.web.Application([
-        (r"/(.*)", RouterHandler,dict(redis_client=redis_client,log=logging))
+        (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging))
     ],autoreload=True, xheaders=True)
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
