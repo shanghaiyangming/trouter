@@ -47,11 +47,11 @@ parser.add_option("-a", "--app", action="store", type="string",
                       dest="app_servers", default=None,
                       help="""app servers多台应用服务器请使用英文逗号分隔""")
 
-parser.add_option("-p", "--port", action="store", type="string",
+parser.add_option("-p", "--port", action="store", type="int",
                       dest="host_port", default=12345,
                       help="""监听端口""")
 
-parser.add_option("-t", "--threshold", action="store", type="string",
+parser.add_option("-t", "--threshold", action="store", type="int",
                       dest="threshold", default=500,
                       help="""进行操作等待的阈值""")
 
