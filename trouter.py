@@ -117,13 +117,12 @@ class RouterHandler(tornado.web.RequestHandler):
         app_servers = ['127.0.0.1:9999']
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         self.logging.info(url)
+        self.logging.info(server_request)
         return tornado.httpclient.HTTPRequest(
             url,
             method=server_request.method,
             headers=server_request.headers,
-            body=server_request.headers,
-            connect_timeout=3,
-            request_timeout=10
+            body=server_request.body
         )
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
