@@ -58,10 +58,13 @@ class RouterHandler(tornado.web.RequestHandler):
             
         if not response.error:
             self.write(response.body)
-            self.finish()
         else:
             self.logging.debug(u"%s,%s"%(response.error,response.body))
+        try:
             self.finish()
+        except Exception,e:
+            self.logging.error(e)
+        
     
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
@@ -85,7 +88,7 @@ class RouterHandler(tornado.web.RequestHandler):
         if self.conn_count > max_conn:
             self.set_status(500) 
             self.write('{"err":"The maximum number of connections limit is reached"}')
-            self.finish()
+            return self.finish()
         
         #print self.request
         self.pool.append(self.hash_request())
@@ -107,30 +110,30 @@ class RouterHandler(tornado.web.RequestHandler):
                 else:
                     break
         http_client = tornado.httpclient.HTTPClient()
-        #print self.request
         response = http_client.fetch(self.construct_request(self.request))
         self.write(response.body)
         self.finish()
-        #self.client.fetch(self.request,self.on_response)
+        #self.client.fetch(self.construct_request(self.request),self.on_response)
     
     def construct_request(self, server_request):
         app_servers = ['127.0.0.1:9999']
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         self.logging.info(url)
         self.logging.info(server_request)
-        if server_request.method=='GET':
-            return tornado.httpclient.HTTPRequest(
-                url,
-                method=server_request.method,
-                headers=server_request.headers
-            )
-        else:
-            return tornado.httpclient.HTTPRequest(
-                url,
-                method=server_request.method,
-                headers=server_request.headers,
-                body=server_request.body
-            )
+        self.logging.info(server_request.body)
+        
+        if not hasattr(server_request,'body') or server_request.body=='':
+            server_request.body = None
+
+        return tornado.httpclient.HTTPRequest(
+            url,
+            method=server_request.method,
+            headers=server_request.headers,
+            body=server_request.body,
+            connect_timeout = 3.0,
+            request_timeout = 10.0,
+            max_redirects = 5
+        )
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
