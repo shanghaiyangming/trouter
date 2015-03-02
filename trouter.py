@@ -88,15 +88,9 @@ class RouterHandler(tornado.web.RequestHandler):
             self.finish()
         
         #print self.request
-        self.request.host = self.filter_url(self.request.host)
         self.pool.append(self.hash_request())
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
-        custom_app_servers = self.get_query_argument('__APP_SERVERS__',default=False)
-        
-        if custom_app_servers!='':
-            print custom_app_servers
-            #app_servers = custom_app_servers.split(',')
             
         
         #未来考虑增加过滤功能
@@ -119,9 +113,18 @@ class RouterHandler(tornado.web.RequestHandler):
         self.finish()
         #self.client.fetch(self.request,self.on_response)
     
-    def construct_request(self, server_request,url):
+    def construct_request(self, server_request):
+        app_servers = ['127.0.0.1:9999']
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
-        return tornado.httpclient.HTTPRequest(url,method=server_request.method,headers=server_request.headers,body=server_request.headers,connect_timeout=3,request_timeout=10)
+        self.logging.info(url)
+        return tornado.httpclient.HTTPRequest(
+            url,
+            method=server_request.method,
+            headers=server_request.headers,
+            body=server_request.headers,
+            connect_timeout=3,
+            request_timeout=10
+        )
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
