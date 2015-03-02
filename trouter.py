@@ -38,7 +38,8 @@ max_conn = 10000
 #app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
 app_servers = ['127.0.0.1:9999']
 host_port = 8000
-threshold = 1
+threshold = 500
+
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
 
