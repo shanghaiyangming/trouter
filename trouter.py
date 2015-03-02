@@ -23,6 +23,7 @@ import json
 import redis
 import pickle
 import socket
+import optparse
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -33,12 +34,54 @@ from libs.common import ComplexEncoder,random_list,obj_hash
 from conf.redis_conn import redis_client
 from conf.log import logging
 
+"""代码版本"""
 version = '0.0.1'
-max_conn = 10000
+
+parser = optparse.OptionParser()
+parser.add_option("-m", "--max", action="store", type="int",
+                      dest="max_conn", default=10000,
+                      help="""最大连接数""")
+
+parser.add_option("-a", "--app", action="store", type="string",
+                      dest="app_servers", default=None,
+                      help="""app servers多台应用服务器请使用英文逗号分隔""")
+
+parser.add_option("-p", "--port", action="store", type="string",
+                      dest="host_port", default=12345,
+                      help="""监听端口""")
+
+parser.add_option("-t", "--threshold", action="store", type="string",
+                      dest="threshold", default=500,
+                      help="""进行操作等待的阈值""")
+
+if options.max_conn is None:
+    logging.error('请设定最大连接数，默认10000')
+    sys.exit(2)
+else:
+    max_conn = options.max_conn
+
+if options.app_servers is None:
+    logging.error('请设定应用服务器的数量')
+    sys.exit(2)
+else:
+    app_servers = options.app_servers.split(',')
+
+if options.host_port is None:
+    logging.error('请设定监听的端口号，默认值12345')
+    sys.exit(2)
+else:
+    app_servers = options.host_port
+    
+if options.threshold is None:
+    logging.error('请设定请求等待的阈值，低于该阈值直接转发无需等待')
+    sys.exit(2)
+else:
+    threshold = options.threshold
+    
 #app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
-app_servers = ['127.0.0.1:9999']
-host_port = 8000
-threshold = 500
+#app_servers = ['127.0.0.1:9999']
+#host_port = 8000
+#threshold = 500
 
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
