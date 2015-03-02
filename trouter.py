@@ -109,11 +109,16 @@ class RouterHandler(tornado.web.RequestHandler):
                     time.sleep(1)
                 else:
                     break
-        http_client = tornado.httpclient.HTTPClient()
-        response = http_client.fetch(self.construct_request(self.request))
-        self.write(response.body)
-        self.finish()
-        #self.client.fetch(self.construct_request(self.request),self.on_response)
+                
+        try:
+            #http_client = tornado.httpclient.HTTPClient()
+            #response = http_client.fetch(self.construct_request(self.request))
+            #self.write(response.body)
+            #self.finish()
+            
+            self.client.fetch(self.construct_request(self.request),callback=self.on_response)
+        except Exception,e:
+            self.logging.error(e)
     
     def construct_request(self, server_request):
         app_servers = ['127.0.0.1:9999']
