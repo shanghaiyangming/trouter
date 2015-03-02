@@ -37,6 +37,7 @@ from conf.log import logging
 """代码版本"""
 version = '0.0.1'
 
+#参数设定与检查
 parser = optparse.OptionParser()
 parser.add_option("-m", "--max", action="store", type="int",
                       dest="max_conn", default=10000,
@@ -70,7 +71,7 @@ if options.host_port is None:
     logging.error('请设定监听的端口号，默认值12345')
     sys.exit(2)
 else:
-    app_servers = options.host_port
+    host_port = options.host_port
     
 if options.threshold is None:
     logging.error('请设定请求等待的阈值，低于该阈值直接转发无需等待')
