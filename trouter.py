@@ -168,7 +168,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.error(e)
     
     def construct_request(self, server_request):
-        app_servers = ['127.0.0.1:9999']
+        #app_servers = ['127.0.0.1:9999']
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         self.logging.info(url)
         self.logging.info(server_request)
