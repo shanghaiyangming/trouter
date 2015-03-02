@@ -51,7 +51,8 @@ class RouterHandler(tornado.web.RequestHandler):
         self.threshold = threshold
         self.pool = []
         self.security()
-        
+    
+    @tornado.web.asynchronous  
     def on_response(self, response):
         if self.hash_request() in self.pool:
             self.pool.remove(self.hash_request())
@@ -81,6 +82,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.router()
         
     """对来访请求进行转发处理"""
+    @tornado.web.asynchronous
     def router(self):
         self.conn_count += 1
         
