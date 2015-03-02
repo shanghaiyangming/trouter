@@ -55,6 +55,7 @@ parser.add_option("-t", "--threshold", action="store", type="string",
                       dest="threshold", default=500,
                       help="""进行操作等待的阈值""")
 
+(options, args) = parser.parse_args()
 if options.max_conn is None:
     logging.error('请设定最大连接数，默认10000')
     sys.exit(2)
