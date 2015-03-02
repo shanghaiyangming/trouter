@@ -118,12 +118,19 @@ class RouterHandler(tornado.web.RequestHandler):
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         self.logging.info(url)
         self.logging.info(server_request)
-        return tornado.httpclient.HTTPRequest(
-            url,
-            method=server_request.method,
-            headers=server_request.headers,
-            body=server_request.body
-        )
+        if server_request.method=='GET':
+            return tornado.httpclient.HTTPRequest(
+                url,
+                method=server_request.method,
+                headers=server_request.headers
+            )
+        else:
+            return tornado.httpclient.HTTPRequest(
+                url,
+                method=server_request.method,
+                headers=server_request.headers,
+                body=server_request.body
+            )
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
