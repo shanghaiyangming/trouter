@@ -86,7 +86,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.conn_count = 0
         self.redis_client = redis_client
         self.logging = logging
-        self.client = tornado.httpclient.AsyncHTTPClient(max_client=max_conn)
+        self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
         self.threshold = threshold
         self.pool = []
         self.security()
