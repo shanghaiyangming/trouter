@@ -140,19 +140,25 @@ class RouterHandler(tornado.web.RequestHandler):
         
         #黑名单,直接范围503
         if blacklist:
+            del self.request.arguments['__BLACKLIST__']
             blacklist = blacklist.split(',')
             if self.match_list(blacklist):
                 self.set_status(503)
                 return self.finish()
             
         
-        #对于包含这些字符的请求，自动转化为异步请求   
+        #对于包含这些字符的请求，自动转化为异步请求
+        async_filter = False
         if asynclist:
+            del self.request.arguments['__ASYNCLIST__']
             asynclist = asynclist.split(',')
             if self.match_list(asynclist):
                 nodelay = True
+                async_filter = True
         
         if nodelay:
+            if not async_filter:
+                del self.request.arguments['__NODELAY__']
             self.write('{"ok":1}')
             self.finish()
         else:
@@ -201,12 +207,12 @@ class RouterHandler(tornado.web.RequestHandler):
     def security(self):
         pass
     
-    #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化
+    #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
     def match_list(self, match_list):
-        self.logging.info(self.arguments)
+        arguments = self.request.arguments
         match = "|".join(match_list)
-        for k,v in self.arguments:
-            if re.match(match,_unicode(v)):
+        for k,v in arguments:
+            if re.match(match,_unicode(" ".join(v))):
                 return True
         return False  
     
