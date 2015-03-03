@@ -215,6 +215,8 @@ class RouterHandler(tornado.web.RequestHandler):
         for k in arguments.keys():
             if re.match(match,_unicode(" ".join(arguments[k]))):
                 return True
+        if server_request.body != '' and re.match(match,_unicode(server_request.body)):
+            return True
         return False  
     
     def hash_request(self):
