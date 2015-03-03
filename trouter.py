@@ -109,6 +109,7 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
+        self.conn_count -= 1
         if self.hash_request() in self.pool:
             self.pool.remove(self.hash_request())
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
@@ -222,8 +223,7 @@ class RouterHandler(tornado.web.RequestHandler):
         return False  
     
     def hash_request(self):
-        if not self.hash_request:
-            self.hash_request = obj_hash(self.request)
+        self.hash_request = obj_hash(self.request)
         return self.hash_request
 
 
