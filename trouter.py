@@ -29,6 +29,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
+from tornado.escape import utf8, _unicode
 
 from libs.common import ComplexEncoder,random_list,obj_hash
 from conf.redis_conn import redis_client
@@ -73,11 +74,6 @@ if options.threshold is None:
     sys.exit(2)
 else:
     threshold = options.threshold
-    
-#app_servers = ['10.0.0.10','10.0.0.11','10.0.0.12','10.0.0.13']
-#app_servers = ['127.0.0.1:9999']
-#host_port = 8000
-#threshold = 500
 
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
@@ -136,12 +132,23 @@ class RouterHandler(tornado.web.RequestHandler):
         #print self.request
         self.pool.append(self.hash_request())
         nodelay = self.get_query_argument('__NODELAY__',default=False)
-        block_content = self.get_query_argument('__BLOCK_CONTENT__',default=False)
+        blacklist = self.get_query_argument('__BLACKLIST__',default=False)
+        asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
             
         
-        #未来考虑增加过滤功能
-        if block_content:
-            block_list = block_content.split(',')
+        #黑名单,直接范围503
+        if blacklist:
+            blacklist = blacklist.split(',')
+            if self.match_list(blacklist):
+                self.set_status(503)
+                return self.finish()
+            
+        
+        #对于包含这些字符的请求，自动转化为异步请求   
+        if asynclist:
+            asynclist = asynclist.split(',')
+            if self.match_list(asynclist):
+                nodelay = True
         
         if nodelay:
             self.write('{"ok":1}')
@@ -153,11 +160,13 @@ class RouterHandler(tornado.web.RequestHandler):
                 else:
                     break 
         try:
+            #同步请求方式
             #http_client = tornado.httpclient.HTTPClient()
             #response = http_client.fetch(self.construct_request(self.request))
             #self.write(response.body)
             #self.finish()
             
+            #异步请求方式
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
             self.logging.error(e)
@@ -186,6 +195,15 @@ class RouterHandler(tornado.web.RequestHandler):
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
         pass
+    
+    #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化
+    def match_list(self, match_list):
+        self.logging.info(self.arguments)
+        match = "|".join(match_list)
+        for k,v in self.arguments:
+            if re.match(match,_unicode(v)):
+                return True
+        return False  
     
     def hash_request(self):
         if not self.hash_request:
