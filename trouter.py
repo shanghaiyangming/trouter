@@ -211,8 +211,8 @@ class RouterHandler(tornado.web.RequestHandler):
     def match_list(self, match_list):
         arguments = self.request.arguments
         match = "|".join(match_list)
-        for k,v in arguments:
-            if re.match(match,_unicode(" ".join(v))):
+        for k in arguments.keys():
+            if re.match(match,_unicode(" ".join(arguments[k]))):
                 return True
         return False  
     
