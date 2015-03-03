@@ -21,7 +21,7 @@ class ComplexEncoder(json.JSONEncoder):
 def random_list(some_list):
     if len(some_list) and isinstance(some_list,list):
         random.shuffle(some_list)
-        return some_list.pop()
+        return some_list[0]
     else:
         raise ValueError,'invalid argument'
         

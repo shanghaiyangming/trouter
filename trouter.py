@@ -61,7 +61,9 @@ if options.app_servers is None:
     logging.error('请设定应用服务器的数量')
     sys.exit(2)
 else:
+    logging.info(options.app_servers)
     app_servers = options.app_servers.split(',')
+    logging.info(app_servers)
 
 if options.host_port is None:
     logging.error('请设定监听的端口号，默认值12345')
@@ -174,6 +176,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.error(e)
     
     def construct_request(self, server_request):
+        self.logging.info(app_servers)
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         
         self.logging.info(url)
