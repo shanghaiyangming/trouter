@@ -96,7 +96,8 @@ class RouterHandler(tornado.web.RequestHandler):
     def on_response(self, response):
         if self.hash_request() in self.pool:
             self.pool.remove(self.hash_request())
-            
+        
+        self.set_status(response.code)     
         if not response.error:
             self.write(response.body)
         else:
