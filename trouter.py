@@ -130,7 +130,6 @@ class RouterHandler(tornado.web.RequestHandler):
             return self.finish()
         
         #print self.request
-        self.pool += 1
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
@@ -175,6 +174,7 @@ class RouterHandler(tornado.web.RequestHandler):
             #self.finish()
             
             #异步请求方式
+            self.pool += 1
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
             self.pool -= 1
