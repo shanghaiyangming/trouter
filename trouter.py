@@ -42,7 +42,7 @@ parser = optparse.OptionParser()
 
 parser.add_option("-m", "--max", action="store", type="int", dest="max_conn", default=10000, help="""最大连接数""")
 
-parser.add_option("-s", "--servers", action="store", type="string", dest="app_servers", default=None, help="""app servers多台应用服务器请使用英文逗号分隔""")
+parser.add_option("-a", "--app", action="store", type="string", dest="app_servers", default=None, help="""app servers多台应用服务器请使用英文逗号分隔""")
 
 parser.add_option("-p", "--port", action="store", type="int", dest="host_port", default=12345, help="""监听端口""")
 
@@ -150,8 +150,7 @@ class RouterHandler(tornado.web.RequestHandler):
                 if len(self.pool) > self.threshold:
                     time.sleep(1)
                 else:
-                    break
-                
+                    break 
         try:
             #http_client = tornado.httpclient.HTTPClient()
             #response = http_client.fetch(self.construct_request(self.request))
@@ -163,8 +162,8 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.error(e)
     
     def construct_request(self, server_request):
-        #app_servers = ['127.0.0.1:9999']
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
+        
         self.logging.info(url)
         self.logging.info(server_request)
         self.logging.info(server_request.body)
@@ -194,14 +193,14 @@ class RouterHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
-    from tornado.options import define, options
-    define("port", default=host_port, help="run on the given port", type=int)
-    tornado.options.parse_command_line()
     app = tornado.web.Application([
         (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging))
     ],autoreload=True, xheaders=True)
     http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(options.port)
+    #启动多个进程完运行服务，仅在*nix有效
+    #http_server.bind(host_port)
+    #http_server.start(0)
+    http_server.listen(host_port)
     tornado.ioloop.IOLoop.instance().start()
     
 
