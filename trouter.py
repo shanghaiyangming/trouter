@@ -178,7 +178,8 @@ class RouterHandler(tornado.web.RequestHandler):
             body=server_request.body,
             connect_timeout = 3.0,
             request_timeout = 10.0,
-            max_redirects = 5
+            max_redirects = 5,
+            allow_nonstandard_methods = True
         )
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
