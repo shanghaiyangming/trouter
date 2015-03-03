@@ -169,6 +169,7 @@ class RouterHandler(tornado.web.RequestHandler):
             #异步请求方式
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
+            self.logging.debug(app_servers)
             self.logging.debug(self.construct_request(self.request))
             self.logging.error(e)
     
