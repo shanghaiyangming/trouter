@@ -144,6 +144,7 @@ class RouterHandler(tornado.web.RequestHandler):
             blacklist = blacklist.split(',')
             if self.match_list(blacklist):
                 self.set_status(503)
+                self.write("503 Service Unavailable")
                 return self.finish()
             
         
