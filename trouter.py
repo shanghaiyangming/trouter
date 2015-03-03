@@ -164,6 +164,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.write('{"ok":1}')
             self.finish()
         else:
+            self.logging.info("pool number is %d"%(len(self.pool),))
             while True:
                 if len(self.pool) > self.threshold:
                     time.sleep(1)
