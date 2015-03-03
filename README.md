@@ -1,29 +1,30 @@
 #Trouter
-��Ŀ���ƣ�<br />
+项目名称：<br />
 Tornado Router<br /><br />
-��ƣ�<br />
+简称：<br />
 Trouter<br /><br />
-���ܽ��ܣ�<br /><br />
-ʹ��tornado����·��ת�����ơ�<br /><br />
-����ʱ����ִ��������󳬹���ֵ�����������Ὣ���ز��ֵ����󻺴���zeroMQ/Redis�У��Ա��ܻ������ͷ�����Ӧ�÷�������
-���Ϸ�����������С�
+功能介绍：<br /><br />
+使用tornado进行路由转发控制。<br /><br />
+当短时间出现大量的请求超过阈值的情况，服务会将过载部分的请求缓存在zeroMQ/Redis中，以便能缓慢的释放请求到应用服务器。
+保障服务的正常运行。
 <br /><br />
-��������ʾ����
+启动命令示例：
 python trouter.py -m 1000 -a "127.0.0.1:9999,127.0.0.2:9999" -p 8000 -t 500
 <br /><br />
-����˵����<br /><br />
--m --max �����������Ĭ����10000<br /><br />
--a --app ��̨Ӧ�÷������ĵ�ַ�����Ӧ�÷�������Ӣ�Ķ��ŷָ�<br /><br />
--p --port �����Ķ˿ںţ�Ĭ����12345<br /><br />
--t --threshold ��ֵ��Ĭ����500 ���ﵽ��ֵ��ʱ���Զ��������������ת��<br /><br />
+参数说明：<br /><br />
+-m --max 最大连接数，默认是10000<br /><br />
+-a --app 后台应用服务器的地址，多个应用服务器用英文逗号分隔<br /><br />
+-p --port 监听的端口号，默认是12345<br /><br />
+-t --threshold 阈值，默认是500 当达到阈值的时候，自动阻塞请求不再向后转发<br /><br />
 
-Nginxת�����ã�
+Nginx转发设置：
 <br /><br />
-���ܲ�����ʽ
+接受参数方式
 <br /><br />
 upstream test {
     server 192.168.56.1:8000;
     server 192.168.56.1:8000?__NODELAY__=1;
 }
 <br /><br />
-__NODELAY__��ʾֱ�ӷ��سɹ�{"ok":1},���ӳٷ��أ�����������Ӧ�÷���������ƽ������
+注意：NODELAY前后均有双下划线
+__NODELAY__表示直接返回成功{"ok":1},无延迟返回，后续将根据应用服务器的量平缓处理
