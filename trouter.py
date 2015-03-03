@@ -88,14 +88,12 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
         self.threshold = threshold
-        self.pool = []
+        self.pool = 0
         self.security()
     
     @tornado.web.asynchronous  
     def on_response(self, response):
-        if self.hash_request() in self.pool:
-            self.pool.remove(self.hash_request())
-        
+        self.pool -= 1
         self.set_status(response.code)     
         if not response.error:
             self.write(response.body)
@@ -110,8 +108,6 @@ class RouterHandler(tornado.web.RequestHandler):
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
         self.conn_count -= 1
-        if self.hash_request() in self.pool:
-            self.pool.remove(self.hash_request())
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
     
     @tornado.web.asynchronous
@@ -134,7 +130,7 @@ class RouterHandler(tornado.web.RequestHandler):
             return self.finish()
         
         #print self.request
-        self.pool.append(self.hash_request())
+        self.pool += 1
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
@@ -167,7 +163,7 @@ class RouterHandler(tornado.web.RequestHandler):
         else:
             self.logging.info("pool number is %d"%(len(self.pool),))
             while True:
-                if len(self.pool) > self.threshold:
+                if self.pool > self.threshold:
                     time.sleep(1)
                 else:
                     break 
@@ -181,9 +177,11 @@ class RouterHandler(tornado.web.RequestHandler):
             #异步请求方式
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
+            self.pool -= 1
             self.logging.debug(app_servers)
             self.logging.debug(self.construct_request(self.request))
             self.logging.error(e)
+            self.finish()
     
     def construct_request(self, server_request):
         self.logging.info(app_servers)
