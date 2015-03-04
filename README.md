@@ -21,10 +21,10 @@ Nginx转发设置：
 <br /><br />
 接受参数方式
 <br /><br />
-upstream test {
-    server 192.168.56.1:8000;
-    server 192.168.56.1:8000?__NODELAY__=1;
+upstream test {<br /><br />
+    server 192.168.56.1:8000;<br /><br />
+    server 192.168.56.1:8000?__NODELAY__=1;<br /><br />
 }
 <br /><br />
 注意：NODELAY前后均有双下划线
-__NODELAY__表示直接返回成功{"ok":1},无延迟返回，后续将根据应用服务器的量平缓处理
+\_\_NODELAY\_\_表示直接返回成功{"ok":1},无延迟返回，后续将根据应用服务器的量平缓处理
