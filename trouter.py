@@ -158,7 +158,6 @@ class RouterHandler(tornado.web.RequestHandler):
                     
         #黑名单,直接范围503
         if blacklist:
-            del self.request.arguments['__BLACKLIST__']
             blacklist = blacklist.split(',')
             if self.match_list(blacklist):
                 self.set_status(503)
@@ -169,7 +168,6 @@ class RouterHandler(tornado.web.RequestHandler):
         #对于包含这些字符的请求，自动转化为异步请求
         async_filter = False
         if asynclist:
-            del self.request.arguments['__ASYNCLIST__']
             asynclist = asynclist.split(',')
             if self.match_list(asynclist):
                 nodelay = True
@@ -177,8 +175,6 @@ class RouterHandler(tornado.web.RequestHandler):
                 
         if nodelay:
             self.is_async = True
-            if not async_filter:
-                del self.request.arguments['__NODELAY__']
             self.write('%s'%(async_result,))
             self.finish()
 
@@ -238,6 +234,15 @@ class RouterHandler(tornado.web.RequestHandler):
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
     def match_list(self, match_list):
         arguments = self.request.arguments
+        if '__NODELAY__' in arguments:
+            del arguments['__NODELAY__']
+        if '__BLACKLIST__' in arguments:
+            del arguments['__BLACKLIST__']
+        if '__ASYNCLIST__' in arguments:
+            del arguments['__ASYNCLIST__']
+        if '__ASYNC_RESULT__' in arguments:
+            del arguments['__ASYNC_RESULT__']
+
         match = "|".join(match_list)
         for k in arguments.keys():
             if re.match(match,_unicode(" ".join(arguments[k]))):
