@@ -99,7 +99,7 @@ conn_count = 0
 pool = 0
 sync = 0
 async = 0
-http_client_aysnc = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
+http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 
 class RouterHandler(tornado.web.RequestHandler):
