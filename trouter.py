@@ -50,6 +50,8 @@ parser.add_option("-p", "--port", action="store", type="int", dest="host_port", 
 
 parser.add_option("-t", "--threshold", action="store", type="int", dest="threshold", default=500, help="""进行操作等待的阈值""")
 
+parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
+
 (options, args) = parser.parse_args()
 
 if options.max_conn is None:
@@ -77,12 +79,20 @@ if options.threshold is None:
     sys.exit(2)
 else:
     threshold = options.threshold
+    
+if options.sync_threshold is None:
+    logging.error('请设定请求等待的阈值，低于该阈值直接转发无需等待')
+    sys.exit(2)
+else:
+    sync_threshold = options.sync_threshold
 
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
 
 conn_count = 0
 pool = 0
+sync = 0
+aysnc = 0
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
@@ -90,13 +100,18 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
         self.threshold = threshold
+        self.sync_threshold = sync_threshold
+        self.is_async = False
         self.security()
         self.logging.info("initialize")
     
     def on_response(self, response):
-        global pool,conn_count
+        global pool,conn_count,sync,async
         pool -= 1
+        if self.is_async:
+            async -= 1
         self.logging.info("after response the pool number is:%d"%(pool,))
+        self.logging.info("after response the async pool number is:%d"%(async,))
         try:
             self.set_status(response.code)   
         except Exception,e:
@@ -115,7 +130,7 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
-        global pool,conn_count
+        global pool,conn_count,sync,async
         conn_count -= 1
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
     
@@ -129,13 +144,11 @@ class RouterHandler(tornado.web.RequestHandler):
         
     """对来访请求进行转发处理"""
     def router(self):
-        global pool,conn_count
-        #print self.request
+        global pool,conn_count,sync,async
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
-            
-        
+                    
         #黑名单,直接范围503
         if blacklist:
             del self.request.arguments['__BLACKLIST__']
@@ -154,19 +167,20 @@ class RouterHandler(tornado.web.RequestHandler):
             if self.match_list(asynclist):
                 nodelay = True
                 async_filter = True
-        
-        self.logging.info("pool number is %d"%(pool,))
-        self.logging.info("conn number is %d"%(conn_count,))
-        
+                
         if nodelay:
+            self.is_async = True
             if not async_filter:
                 del self.request.arguments['__NODELAY__']
             self.write('{"ok":1}')
-            return self.finish()
-        else:
-            if pool > self.threshold:
-                return tornado.ioloop.IOLoop.instance().add_callback(self.router)
+            self.finish()
+
+        if pool > self.threshold or async > self.threshold - self.sync_threshold:
+            return tornado.ioloop.IOLoop.instance().add_callback(self.router)
                 
+        self.logging.info("pool number is %d"%(pool,))
+        self.logging.info("conn number is %d"%(conn_count,))
+        
         conn_count += 1
         #如果达到处理上限，那么停止接受连接，返回信息结束
         if conn_count > max_conn:
@@ -176,9 +190,13 @@ class RouterHandler(tornado.web.RequestHandler):
         
         try:
             pool += 1
+            if self.is_async:
+                async += 1
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
             pool -= 1
+            if self.is_async:
+                async -= 1
             self.logging.debug(app_servers)
             self.logging.debug(self.construct_request(self.request))
             self.logging.error(e)
