@@ -1,1 +1,1 @@
-python trouter.py -m 1000 -a "127.0.0.1:9999" -p 8000 -t 5
+python trouter.py -m 100 -a "127.0.0.1:9999" -p 8000 -t 5

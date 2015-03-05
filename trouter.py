@@ -83,7 +83,7 @@ logging.info("Host:%s"%(host_server,))
 
 conn_count = 0
 pool = 0
-    
+
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
         self.redis_client = redis_client
@@ -96,6 +96,7 @@ class RouterHandler(tornado.web.RequestHandler):
     def on_response(self, response):
         global pool,conn_count
         pool -= 1
+        self.logging.info("after response the pool number is:%d"%(pool,))
         try:
             self.set_status(response.code)   
         except Exception,e:
@@ -129,14 +130,6 @@ class RouterHandler(tornado.web.RequestHandler):
     """对来访请求进行转发处理"""
     def router(self):
         global pool,conn_count
-        conn_count += 1
-        
-        #如果达到处理上限，那么停止接受连接，返回信息结束
-        if conn_count > max_conn:
-            self.set_status(500) 
-            self.write('{"err":"The maximum number of connections limit is reached"}')
-            return self.finish()
-        
         #print self.request
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
@@ -169,21 +162,19 @@ class RouterHandler(tornado.web.RequestHandler):
             if not async_filter:
                 del self.request.arguments['__NODELAY__']
             self.write('{"ok":1}')
-            self.finish()
+            return self.finish()
         else:
-            while True:
-                if pool > self.threshold:
-                    time.sleep(1)
-                else:
-                    break 
+            if pool > self.threshold:
+                return tornado.ioloop.IOLoop.instance().add_callback(self.router)
+                
+        conn_count += 1
+        #如果达到处理上限，那么停止接受连接，返回信息结束
+        if conn_count > max_conn:
+            self.set_status(500) 
+            self.write('{"err":"The maximum number of connections limit is reached"}')
+            return self.finish()
+        
         try:
-            #同步请求方式
-            #http_client = tornado.httpclient.HTTPClient()
-            #response = http_client.fetch(self.construct_request(self.request))
-            #self.write(response.body)
-            #self.finish()
-            
-            #异步请求方式
             pool += 1
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
