@@ -157,7 +157,8 @@ class RouterHandler(tornado.web.RequestHandler):
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
         async_result = urllib.unquote(self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}'))
-                    
+        conn_count += 1
+        
         #黑名单,直接范围503
         if blacklist:
             blacklist = blacklist.split(',')
@@ -187,7 +188,6 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("pool number is %d"%(pool,))
         self.logging.info("conn number is %d"%(conn_count,))
         
-        conn_count += 1
         #如果达到处理上限，那么停止接受连接，返回信息结束
         if conn_count > max_conn:
             self.set_status(500) 
