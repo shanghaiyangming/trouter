@@ -102,13 +102,14 @@ async = 0
 http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 
+
 class RouterHandler(tornado.web.RequestHandler):
-    def initialize(self, redis_client,logging,http_client_sync,http_client_aysnc):
+    def initialize(self, redis_client,logging,http_client_sync,http_client_async):
         self.start = True
         self.redis_client = redis_client
         self.logging = logging
         self.client_sync = http_client_sync
-        self.client_async = http_client_aysnc
+        self.client_async = http_client_async
         self.threshold = threshold
         self.sync_threshold = sync_threshold
         self.is_async = False
@@ -204,7 +205,7 @@ class RouterHandler(tornado.web.RequestHandler):
             pool += 1
             if self.is_async:
                 async += 1
-                self.client_aysnc.fetch(self.construct_request(self.request),callback=self.on_response)
+                self.client_async.fetch(self.construct_request(self.request),callback=self.on_response)
             else:
                 self.client_sync.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
