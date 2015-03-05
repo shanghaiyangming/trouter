@@ -93,7 +93,6 @@ class RouterHandler(tornado.web.RequestHandler):
         self.security()
         self.logging.info("initialize")
     
-    @tornado.web.asynchronous  
     def on_response(self, response):
         global pool,conn_count
         pool -= 1
@@ -128,7 +127,6 @@ class RouterHandler(tornado.web.RequestHandler):
         self.router()
         
     """对来访请求进行转发处理"""
-    @tornado.web.asynchronous
     def router(self):
         global pool,conn_count
         conn_count += 1
