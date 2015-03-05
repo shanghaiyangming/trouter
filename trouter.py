@@ -25,6 +25,7 @@ import redis
 import pickle
 import socket
 import optparse
+import urllib
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -51,6 +52,7 @@ parser.add_option("-p", "--port", action="store", type="int", dest="host_port", 
 parser.add_option("-t", "--threshold", action="store", type="int", dest="threshold", default=500, help="""进行操作等待的阈值""")
 
 parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
+
 
 (options, args) = parser.parse_args()
 
@@ -85,6 +87,10 @@ if options.sync_threshold is None:
     sys.exit(2)
 else:
     sync_threshold = options.sync_threshold
+    
+if threshold <= sync_threshold:
+    logging.error('阈值必须大于同步请求阈值')
+    sys.exit(2)
 
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
@@ -148,6 +154,7 @@ class RouterHandler(tornado.web.RequestHandler):
         nodelay = self.get_query_argument('__NODELAY__',default=False)
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
+        async_result = urllib.unquote(self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}'))
                     
         #黑名单,直接范围503
         if blacklist:
@@ -172,7 +179,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.is_async = True
             if not async_filter:
                 del self.request.arguments['__NODELAY__']
-            self.write('{"ok":1}')
+            self.write('%s'%(async_result,))
             self.finish()
 
         if pool > self.threshold or async > self.threshold - self.sync_threshold:
