@@ -99,13 +99,16 @@ conn_count = 0
 pool = 0
 sync = 0
 async = 0
+http_client_aysnc = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
+http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 
 class RouterHandler(tornado.web.RequestHandler):
-    def initialize(self, redis_client,logging):
+    def initialize(self, redis_client,logging,http_client_sync,http_client_aysnc):
         self.start = True
         self.redis_client = redis_client
         self.logging = logging
-        self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
+        self.client_sync = http_client_sync
+        self.client_async = http_client_aysnc
         self.threshold = threshold
         self.sync_threshold = sync_threshold
         self.is_async = False
@@ -201,7 +204,9 @@ class RouterHandler(tornado.web.RequestHandler):
             pool += 1
             if self.is_async:
                 async += 1
-            self.client.fetch(self.construct_request(self.request),callback=self.on_response)
+                self.client_aysnc.fetch(self.construct_request(self.request),callback=self.on_response)
+            else:
+                self.client_sync.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
             pool -= 1
             if self.is_async:
@@ -265,7 +270,7 @@ class RouterHandler(tornado.web.RequestHandler):
 
 if __name__ == "__main__":
     app = tornado.web.Application([
-        (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging))
+        (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging,http_client_sync=http_client_sync,http_client_async=http_client_async))
     ],autoreload=True, xheaders=True)
     http_server = tornado.httpserver.HTTPServer(app)
     #启动多个进程完运行服务，仅在*nix有效
