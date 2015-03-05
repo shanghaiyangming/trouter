@@ -98,7 +98,7 @@ logging.info("Host:%s"%(host_server,))
 conn_count = 0
 pool = 0
 sync = 0
-aysnc = 0
+async = 0
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
