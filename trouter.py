@@ -102,6 +102,7 @@ async = 0
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
+        self.start = True
         self.redis_client = redis_client
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
@@ -157,7 +158,8 @@ class RouterHandler(tornado.web.RequestHandler):
         blacklist = self.get_query_argument('__BLACKLIST__',default=False)
         asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
         async_result = urllib.unquote(self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}'))
-        conn_count += 1
+        if self.start:
+            conn_count += 1
         
         #黑名单,直接范围503
         if blacklist:
@@ -183,6 +185,7 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.finish()
 
         if pool > self.threshold or async > self.threshold - self.sync_threshold:
+            self.start = False
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
                 
         self.logging.info("pool number is %d"%(pool,))
