@@ -81,20 +81,28 @@ else:
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
 
+conn_count = 0
+pool = 0
+    
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging):
-        self.conn_count = 0
         self.redis_client = redis_client
         self.logging = logging
         self.client = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
         self.threshold = threshold
-        self.pool = 0
         self.security()
+        self.logging.info("initialize")
     
     @tornado.web.asynchronous  
     def on_response(self, response):
-        self.pool -= 1
-        self.set_status(response.code)     
+        global pool,conn_count
+        pool -= 1
+        try:
+            self.set_status(response.code)   
+        except Exception,e:
+            self.logging.error(e)
+            self.set_status(500)   
+          
         if not response.error:
             self.write(response.body)
         else:
@@ -107,7 +115,8 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
-        self.conn_count -= 1
+        global pool,conn_count
+        conn_count -= 1
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
     
     @tornado.web.asynchronous
@@ -121,10 +130,11 @@ class RouterHandler(tornado.web.RequestHandler):
     """对来访请求进行转发处理"""
     @tornado.web.asynchronous
     def router(self):
-        self.conn_count += 1
+        global pool,conn_count
+        conn_count += 1
         
         #如果达到处理上限，那么停止接受连接，返回信息结束
-        if self.conn_count > max_conn:
+        if conn_count > max_conn:
             self.set_status(500) 
             self.write('{"err":"The maximum number of connections limit is reached"}')
             return self.finish()
@@ -154,15 +164,17 @@ class RouterHandler(tornado.web.RequestHandler):
                 nodelay = True
                 async_filter = True
         
+        self.logging.info("pool number is %d"%(pool,))
+        self.logging.info("conn number is %d"%(conn_count,))
+        
         if nodelay:
             if not async_filter:
                 del self.request.arguments['__NODELAY__']
             self.write('{"ok":1}')
             self.finish()
         else:
-            self.logging.info("pool number is %d"%(self.pool,))
             while True:
-                if self.pool > self.threshold:
+                if pool > self.threshold:
                     time.sleep(1)
                 else:
                     break 
@@ -174,10 +186,10 @@ class RouterHandler(tornado.web.RequestHandler):
             #self.finish()
             
             #异步请求方式
-            self.pool += 1
+            pool += 1
             self.client.fetch(self.construct_request(self.request),callback=self.on_response)
         except Exception,e:
-            self.pool -= 1
+            pool -= 1
             self.logging.debug(app_servers)
             self.logging.debug(self.construct_request(self.request))
             self.logging.error(e)
