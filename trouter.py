@@ -118,20 +118,22 @@ class RouterHandler(tornado.web.RequestHandler):
             async -= 1
         self.logging.info("after response the pool number is:%d"%(pool,))
         self.logging.info("after response the async pool number is:%d"%(async,))
-        try:
-            self.set_status(response.code)   
-        except Exception,e:
-            self.logging.error(e)
-            self.set_status(500)   
-          
-        if not response.error:
-            self.write(response.body)
-        else:
-            self.logging.debug(u"%s,%s"%(response.error,response.body))
-        try:
-            self.finish()
-        except Exception,e:
-            self.logging.error(e)
+
+        if not self.is_async:
+            try:
+                self.set_status(response.code)   
+            except Exception,e:
+                self.logging.error(e)
+                self.set_status(500)
+            
+            if not response.error:
+                self.write(response.body)
+            else:
+                self.logging.debug(u"%s,%s"%(response.error,response.body))
+            try:
+                self.finish()
+            except Exception,e:
+                self.logging.error(e)
         
     
     #确保列队中的请求被删除，并添加处理header信息标记
@@ -174,9 +176,10 @@ class RouterHandler(tornado.web.RequestHandler):
                 async_filter = True
                 
         if nodelay:
-            self.is_async = True
-            self.write('%s'%(async_result,))
-            self.finish()
+            if not self._finished:
+                self.is_async = True
+                self.write('%s'%(async_result,))
+                self.finish()
 
         if pool > self.threshold or async > self.threshold - self.sync_threshold:
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
