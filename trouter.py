@@ -184,7 +184,7 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.write('%s'%(async_result,))
                 self.finish()
 
-        if pool > self.threshold or async > self.threshold - self.sync_threshold:
+        if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
                 
