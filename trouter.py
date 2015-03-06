@@ -53,7 +53,7 @@ parser.add_option("-t", "--threshold", action="store", type="int", dest="thresho
 
 parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
 
-parser.add_option("-g", "--gearman", action="store", type="int", dest="gearman_srv", default="localhost:4730", help="""设置Gearman服务器地址""")
+parser.add_option("-g", "--gearman", action="store", type="string", dest="gearman_srv", default="localhost:4730", help="""设置Gearman服务器地址""")
 
 (options, args) = parser.parse_args()
 
@@ -194,7 +194,8 @@ class RouterHandler(tornado.web.RequestHandler):
         if nodelay:
             if not self._finished:
                 self.is_async = True
-                gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request))
+                #提交任务
+                gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request),background=True,poll_timeout=3)
                 self.write('%s'%(async_result,))
                 return self.finish()
         
