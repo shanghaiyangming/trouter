@@ -88,18 +88,18 @@ if options.sync_threshold is None:
     sys.exit(2)
 else:
     sync_threshold = options.sync_threshold
-    
-if options.gearman_srv is None:
-    logging.error('请设定Gearman服务地址')
-    sys.exit(2)
-else:
+
+gearman_srv = None  
+if options.gearman_srv is not None:
     gearman_srv = options.gearman_srv.split(',')
     
 if threshold <= sync_threshold:
     logging.error('阈值必须大于同步请求阈值')
     sys.exit(2)
 
-gearman_client = GearmanPickleClient(gearman_srv)
+if gearman_srv != None:
+    gearman_client = GearmanPickleClient(gearman_srv)
+    
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
 
@@ -195,9 +195,13 @@ class RouterHandler(tornado.web.RequestHandler):
             if not self._finished:
                 self.is_async = True
                 #提交任务
-                gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request),background=True,poll_timeout=3)
-                self.write('%s'%(async_result,))
-                return self.finish()
+                if gearman_srv!=None:
+                    gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request),background=True,poll_timeout=3)
+                    self.write('%s'%(async_result,))
+                    return self.finish()
+                else:
+                    self.write('%s'%(async_result,))
+                    self.finish()
         
         if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
