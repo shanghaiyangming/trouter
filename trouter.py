@@ -33,7 +33,7 @@ from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
 from tornado.escape import utf8, _unicode
 
-from libs.common import ComplexEncoder,random_list,obj_hash
+from libs.common import ComplexEncoder,random_list,obj_hash,GearmanPickleClient
 from conf.redis_conn import redis_client
 from conf.log import logging
 
@@ -53,6 +53,7 @@ parser.add_option("-t", "--threshold", action="store", type="int", dest="thresho
 
 parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
 
+parser.add_option("-g", "--gearman", action="store", type="int", dest="gearman_srv", default="localhost:4730", help="""设置Gearman服务器地址""")
 
 (options, args) = parser.parse_args()
 
@@ -63,7 +64,7 @@ else:
     max_conn = options.max_conn
 
 if options.app_servers is None:
-    logging.error('请设定应用服务器的数量')
+    logging.error('请设定转发应用服务器的信息')
     sys.exit(2)
 else:
     logging.info(options.app_servers)
@@ -88,10 +89,17 @@ if options.sync_threshold is None:
 else:
     sync_threshold = options.sync_threshold
     
+if options.gearman_srv is None:
+    logging.error('请设定Gearman服务地址')
+    sys.exit(2)
+else:
+    gearman_srv = options.gearman_srv.split(',')
+    
 if threshold <= sync_threshold:
     logging.error('阈值必须大于同步请求阈值')
     sys.exit(2)
 
+gearman_client = GearmanPickleClient(gearman_srv)
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
 
@@ -99,6 +107,7 @@ conn_count = 0
 pool = 0
 sync = 0
 async = 0
+
 http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
 
@@ -185,9 +194,10 @@ class RouterHandler(tornado.web.RequestHandler):
         if nodelay:
             if not self._finished:
                 self.is_async = True
+                gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request))
                 self.write('%s'%(async_result,))
-                self.finish()
-
+                return self.finish()
+        
         if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
@@ -273,11 +283,9 @@ if __name__ == "__main__":
     app = tornado.web.Application([
         (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging,http_client_sync=http_client_sync,http_client_async=http_client_async))
     ],autoreload=True, xheaders=True)
-    http_server = tornado.httpserver.HTTPServer(app)
-    #启动多个进程完运行服务，仅在*nix有效
-    #http_server.bind(host_port)
-    #http_server.start(0)
-    http_server.listen(host_port)
+    
+    srv = tornado.httpserver.HTTPServer(app)
+    srv.listen(host_port)
     tornado.ioloop.IOLoop.instance().start()
     
 

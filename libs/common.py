@@ -6,6 +6,7 @@ import random
 import re
 import pickle
 import hashlib
+import gearman
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -39,6 +40,21 @@ def multiple_replace(dic, text):
 
 def obj_hash(obj):
     return hashlib.md5(pickle.dump(obj)).hexdigest()
+
+"""
+自动压缩解压Gearman请求参数
+"""
+class PickleDataEncoder(gearman.DataEncoder):
+    @classmethod
+    def encode(cls, encodable_object):
+        return pickle.dumps(encodable_object)
+
+    @classmethod
+    def decode(cls, decodable_string):
+        return pickle.loads(decodable_string)
+
+class GearmanPickleClient(gearman.GearmanClient):
+    data_encoder = PickleDataEncoder
 
     
 
