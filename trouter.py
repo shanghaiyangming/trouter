@@ -293,7 +293,9 @@ if __name__ == "__main__":
     
     srv = tornado.httpserver.HTTPServer(app)
     srv.listen(host_port)
-    tornado.ioloop.IOLoop.instance().start()
+    instance = tornado.ioloop.IOLoop.instance()
+    logging.info("tornado time is:%d"%(instance.time(),));
+    instance.start()
     
 
 
