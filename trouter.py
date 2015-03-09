@@ -33,11 +33,13 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
-from tornado.escape import utf8, _unicode
 
 from libs.common import ComplexEncoder,random_list,obj_hash,GearmanPickleClient
 from conf.redis_conn import redis_client
 from conf.log import logging
+
+from tornado.escape import utf8, _unicode
+from tornado.options import define, options
 
 """代码版本"""
 version = '0.0.1'
@@ -287,14 +289,20 @@ class RouterHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
+    tornado.options.options.logging = "debug"
     app = tornado.web.Application([
-        (r"/(.*)", RouterHandler,dict(redis_client=redis_client,logging=logging,http_client_sync=http_client_sync,http_client_async=http_client_async))
+        (r"/(.*)", RouterHandler,dict(
+                redis_client=redis_client,
+                logging=logging,
+                http_client_sync=http_client_sync,
+                http_client_async=http_client_async
+            )
+        )
     ],autoreload=True, xheaders=True)
     
     srv = tornado.httpserver.HTTPServer(app)
     srv.listen(host_port)
     instance = tornado.ioloop.IOLoop.instance()
-    logging.info("tornado time is:%d"%(instance.time(),));
     instance.start()
     
 
