@@ -98,8 +98,8 @@ pool = 0
 sync = 0
 async = 0
 
-http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
-http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=max_conn)
+http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=100*max_conn)
+http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=100*max_conn)
 
 
 class RouterHandler(tornado.web.RequestHandler):
@@ -157,10 +157,24 @@ class RouterHandler(tornado.web.RequestHandler):
     """对来访请求进行转发处理"""
     def router(self):
         global pool,conn_count,sync,async
-        nodelay = self.get_query_argument('__NODELAY__',default=False)
-        blacklist = self.get_query_argument('__BLACKLIST__',default=False)
-        asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
-        async_result = urllib.unquote(self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}'))
+        nodelay = self.request.headers.get('__NODELAY__', False)
+        if not nodelay:
+            nodelay = self.get_query_argument('__NODELAY__',default=False)
+        
+        blacklist = self.request.headers.get('__BLACKLIST__', False)
+        if not blacklist:
+            blacklist = self.get_query_argument('__BLACKLIST__',default=False)
+            
+        asynclist = self.request.headers.get('__ASYNCLIST__', False)
+        if not asynclist:
+            asynclist = self.get_query_argument('__ASYNCLIST__',default=False)
+        
+        async_result = self.request.headers.get('__ASYNC_RESULT__',default=False)
+        if not async_result:
+            async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
+        
+        async_result = urllib.unquote(async_result)
+        
         if self.start:
             conn_count += 1
         
@@ -277,7 +291,7 @@ if __name__ == "__main__":
                 http_client_async=http_client_async
             )
         )
-    ],autoreload=True, xheaders=True, debug=True)
+    ],autoreload=True, xheaders=True)
     
     srv = tornado.httpserver.HTTPServer(app)
     srv.listen(host_port)
