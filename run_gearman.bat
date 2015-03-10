@@ -1,1 +1,1 @@
-python trouter.py -m 1000 -a "127.0.0.1:9999" -p 8000 -t 5 -s 4 -g 192.168.5.41:4730
+python trouter.py --conn=1000 --apps "127.0.0.1:9999" --port 8000 --threshold 5 --sync_threshold 4 --gearman_srv 192.168.5.41:4730

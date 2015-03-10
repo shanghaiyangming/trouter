@@ -40,18 +40,20 @@ from conf.redis_conn import redis_client
 from conf.log import logging
 
 from tornado.escape import utf8, _unicode
-from tornado.options import define, options
-from tornado.log import define_logging_options
-
+from tornado.options import define, options, parse_command_line
+ 
 """代码版本"""
 version = '0.0.1'
 
-define("max_conn", type="int", default=5000, help="最大连接数")
-define("apps", type="string", default=None, help="app servers多台应用服务器请使用英文逗号分隔")
-define("port", type="int", default=12345, help="监听端口")
-define("threshold", type="int", default=500, help="进行操作等待的阈值")
-define("sync_threshold", type="int", default=300, help="保障同步操作的数量")
-define("gearman_srv", type="string", default="127.0.0.1:3306", help="设置Gearman服务器地址")
+define("conn", type=int, default=5000, help="最大连接数")
+define("apps", type=str, default="", help="app servers多台应用服务器请使用英文逗号分隔")
+define("port", type=int, default=12345, help="监听端口")
+define("threshold", type=int, default=500, help="进行操作等待的阈值")
+define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
+define("gearman_srv", type=str, default="127.0.0.1:3306", help="设置Gearman服务器地址")
+parse_command_line()
+logging.info(options)
+
 
 #参数设定与检查
 #parser = optparse.OptionParser()
@@ -70,17 +72,17 @@ define("gearman_srv", type="string", default="127.0.0.1:3306", help="设置Gearm
 #
 #(options, args) = parser.parse_args()
 
-if options.max_conn is None:
+
+if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
     sys.exit(2)
 else:
-    max_conn = options.max_conn
+    max_conn = options.conn
 
 if options.apps is None:
     logging.error('请设定转发应用服务器的信息')
     sys.exit(2)
 else:
-    logging.info(options.app_servers)
     app_servers = options.apps.split(',')
     logging.info(app_servers)
 
@@ -115,6 +117,9 @@ if gearman_srv != None:
     
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
+options.logging = 'info'
+options.log_file_prefix = '%s%stornado_listen_%d.log'%(os.path.split(os.path.realpath(__file__))[0],os.sep,host_port)
+parse_command_line()
 
 conn_count = 0
 pool = 0
@@ -298,11 +303,6 @@ class RouterHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
-    from tornado.options import options
-    options.logging = 'info'
-    options.log_file_prefix = '%s%stornado_listen_%d.log'%(os.path.split(os.path.realpath(__file__))[0],os.sep,host_port)
-    tornado.log.define_logging_options(options)
-    logging.info('log path:%s'%(path,))
     app = tornado.web.Application([
         (r"/(.*)", RouterHandler,dict(
                 redis_client=redis_client,
