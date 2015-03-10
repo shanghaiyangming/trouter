@@ -52,26 +52,6 @@ define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
 define("gearman_srv", type=str, default="127.0.0.1:3306", help="设置Gearman服务器地址")
 parse_command_line()
-logging.info(options)
-
-
-#参数设定与检查
-#parser = optparse.OptionParser()
-#
-#parser.add_option("-m", "--max", action="store", type="int", dest="max_conn", default=10000, help="""最大连接数""")
-#
-#parser.add_option("-a", "--app", action="store", type="string", dest="app_servers", default=None, help="""app servers多台应用服务器请使用英文逗号分隔""")
-#
-#parser.add_option("-p", "--port", action="store", type="int", dest="host_port", default=12345, help="""监听端口""")
-#
-#parser.add_option("-t", "--threshold", action="store", type="int", dest="threshold", default=500, help="""进行操作等待的阈值""")
-#
-#parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
-#
-#parser.add_option("-g", "--gearman", action="store", type="string", dest="gearman_srv", default=None, help="""设置Gearman服务器地址""")
-#
-#(options, args) = parser.parse_args()
-
 
 if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -86,7 +66,7 @@ else:
     app_servers = options.apps.split(',')
     logging.info(app_servers)
 
-if options.port is None:
+if options.port is None or options.port is '':
     logging.error('请设定监听的端口号，默认值12345')
     sys.exit(2)
 else:
