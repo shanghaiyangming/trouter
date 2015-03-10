@@ -12,11 +12,12 @@ Trouter<br /><br />
 python trouter.py --conn=1000 --apps=127.0.0.1:9999 --port=8000 --threshold=5 --sync_threshold=4
 <br /><br />
 参数说明：<br /><br />
-conn 最大连接数，默认是5000<br /><br />
-apps 后台应用服务器的地址，多个应用服务器用英文逗号分隔<br /><br />
-port 监听的端口号，默认是12345<br /><br />
-threshold 阈值，默认是500 当达到阈值的时候，自动阻塞请求不再向后转发<br /><br />
-sync_threshold 同步请求阈值，默认300 保证在转发中有300个用于同步转发<br /><br />
+__conn__ 最大连接数，默认是5000<br /><br />
+__apps__ 后台应用服务器的地址，多个应用服务器用英文逗号分隔<br /><br />
+__port__ 监听的端口号，默认是12345<br /><br />
+__threshold__ 阈值，默认是500 当达到阈值的时候，自动阻塞请求不再向后转发<br /><br />
+__sync_threshold__ 同步请求阈值，默认300 保证在转发中有300个用于同步转发<br /><br />
+__logging__ 错误等级，默认是info 可选参数debug|info|warning|error|none<br /><br />
 
 Nginx转发设置：
 <br /><br />
