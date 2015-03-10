@@ -35,7 +35,7 @@ from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from bson.code import Code
 
-from libs.common import ComplexEncoder,random_list,obj_hash,GearmanPickleClient
+from libs.common import ComplexEncoder,random_list,obj_hash
 from conf.redis_conn import redis_client
 from conf.log import logging
 
