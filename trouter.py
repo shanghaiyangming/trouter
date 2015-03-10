@@ -50,7 +50,7 @@ define("apps", type=str, default="", help="app servers多台应用服务器请�
 define("port", type=int, default=12345, help="监听端口")
 define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
-define("gearman_srv", type=str, default=None, help="设置Gearman服务器地址")
+define("gearman_srv", type=str, default="", help="设置Gearman服务器地址")
 parse_command_line()
 
 if options.conn is None:
@@ -66,7 +66,7 @@ else:
     app_servers = options.apps.split(',')
     logging.info(app_servers)
 
-if options.port is None or options.port != '':
+if options.port is None or options.port is '':
     logging.error('请设定监听的端口号，默认值12345')
     sys.exit(2)
 else:
@@ -85,7 +85,7 @@ else:
     sync_threshold = options.sync_threshold
 
 gearman_srv = None  
-if options.gearman_srv is not None:
+if options.gearman_srv is not None or options.gearman_srv !='' :
     gearman_srv = options.gearman_srv.split(',')
     
 if threshold <= sync_threshold:
