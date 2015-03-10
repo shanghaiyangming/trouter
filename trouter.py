@@ -13,6 +13,7 @@ import tornado.options
 import tornado.web
 import tornado.httpclient
 
+import os
 import sys
 import urllib
 import json
@@ -40,26 +41,34 @@ from conf.log import logging
 
 from tornado.escape import utf8, _unicode
 from tornado.options import define, options
+from tornado.log import define_logging_options
 
 """代码版本"""
 version = '0.0.1'
 
+define("max_conn", type="int", default=5000, help="最大连接数")
+define("apps", type="string", default=None, help="app servers多台应用服务器请使用英文逗号分隔")
+define("port", type="int", default=12345, help="监听端口")
+define("threshold", type="int", default=500, help="进行操作等待的阈值")
+define("sync_threshold", type="int", default=300, help="保障同步操作的数量")
+define("gearman_srv", type="string", default="127.0.0.1:3306", help="设置Gearman服务器地址")
+
 #参数设定与检查
-parser = optparse.OptionParser()
-
-parser.add_option("-m", "--max", action="store", type="int", dest="max_conn", default=10000, help="""最大连接数""")
-
-parser.add_option("-a", "--app", action="store", type="string", dest="app_servers", default=None, help="""app servers多台应用服务器请使用英文逗号分隔""")
-
-parser.add_option("-p", "--port", action="store", type="int", dest="host_port", default=12345, help="""监听端口""")
-
-parser.add_option("-t", "--threshold", action="store", type="int", dest="threshold", default=500, help="""进行操作等待的阈值""")
-
-parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
-
-parser.add_option("-g", "--gearman", action="store", type="string", dest="gearman_srv", default=None, help="""设置Gearman服务器地址""")
-
-(options, args) = parser.parse_args()
+#parser = optparse.OptionParser()
+#
+#parser.add_option("-m", "--max", action="store", type="int", dest="max_conn", default=10000, help="""最大连接数""")
+#
+#parser.add_option("-a", "--app", action="store", type="string", dest="app_servers", default=None, help="""app servers多台应用服务器请使用英文逗号分隔""")
+#
+#parser.add_option("-p", "--port", action="store", type="int", dest="host_port", default=12345, help="""监听端口""")
+#
+#parser.add_option("-t", "--threshold", action="store", type="int", dest="threshold", default=500, help="""进行操作等待的阈值""")
+#
+#parser.add_option("-s", "--sync", action="store", type="int", dest="sync_threshold", default=300, help="""保障同步操作的数量""")
+#
+#parser.add_option("-g", "--gearman", action="store", type="string", dest="gearman_srv", default=None, help="""设置Gearman服务器地址""")
+#
+#(options, args) = parser.parse_args()
 
 if options.max_conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -67,19 +76,19 @@ if options.max_conn is None:
 else:
     max_conn = options.max_conn
 
-if options.app_servers is None:
+if options.apps is None:
     logging.error('请设定转发应用服务器的信息')
     sys.exit(2)
 else:
     logging.info(options.app_servers)
-    app_servers = options.app_servers.split(',')
+    app_servers = options.apps.split(',')
     logging.info(app_servers)
 
-if options.host_port is None:
+if options.port is None:
     logging.error('请设定监听的端口号，默认值12345')
     sys.exit(2)
 else:
-    host_port = options.host_port
+    host_port = options.port
     
 if options.threshold is None:
     logging.error('请设定请求等待的阈值，低于该阈值直接转发无需等待')
@@ -289,7 +298,11 @@ class RouterHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
-    tornado.options.options.logging = "debug"
+    from tornado.options import options
+    options.logging = 'info'
+    options.log_file_prefix = '%s%stornado_listen_%d.log'%(os.path.split(os.path.realpath(__file__))[0],os.sep,host_port)
+    tornado.log.define_logging_options(options)
+    logging.info('log path:%s'%(path,))
     app = tornado.web.Application([
         (r"/(.*)", RouterHandler,dict(
                 redis_client=redis_client,
@@ -298,7 +311,7 @@ if __name__ == "__main__":
                 http_client_async=http_client_async
             )
         )
-    ],autoreload=True, xheaders=True)
+    ],autoreload=True, xheaders=True, debug=True)
     
     srv = tornado.httpserver.HTTPServer(app)
     srv.listen(host_port)
