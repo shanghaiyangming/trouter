@@ -66,7 +66,7 @@ else:
     app_servers = options.apps.split(',')
     logging.info(app_servers)
 
-if options.port is None or options.port is '':
+if options.port is None or options.port != '':
     logging.error('请设定监听的端口号，默认值12345')
     sys.exit(2)
 else:
@@ -92,7 +92,7 @@ if threshold <= sync_threshold:
     logging.error('阈值必须大于同步请求阈值')
     sys.exit(2)
 
-if gearman_srv != None:
+if gearman_srv != None or gearman_srv != '':
     gearman_client = GearmanPickleClient(gearman_srv)
     
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
