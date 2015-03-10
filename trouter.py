@@ -50,7 +50,6 @@ define("apps", type=str, default="", help="app servers多台应用服务器请�
 define("port", type=int, default=12345, help="监听端口")
 define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
-define("gearman_srv", type=str, default="", help="设置Gearman服务器地址")
 parse_command_line()
 
 if options.conn is None:
@@ -83,17 +82,10 @@ if options.sync_threshold is None:
     sys.exit(2)
 else:
     sync_threshold = options.sync_threshold
-
-gearman_srv = None  
-if options.gearman_srv is not None or options.gearman_srv !='' :
-    gearman_srv = options.gearman_srv.split(',')
     
 if threshold <= sync_threshold:
     logging.error('阈值必须大于同步请求阈值')
     sys.exit(2)
-
-if gearman_srv != None or gearman_srv != '':
-    gearman_client = GearmanPickleClient(gearman_srv)
     
 host_server = "%s:%s"%(socket.gethostbyname(socket.gethostname()),host_port)
 logging.info("Host:%s"%(host_server,))
@@ -192,14 +184,8 @@ class RouterHandler(tornado.web.RequestHandler):
         if nodelay:
             if not self._finished:
                 self.is_async = True
-                #提交任务
-                if gearman_srv!=None:
-                    gearman_client.submit_job("aysnc_http_request", self.construct_request(self.request),background=True,poll_timeout=3)
-                    self.write('%s'%(async_result,))
-                    return self.finish()
-                else:
-                    self.write('%s'%(async_result,))
-                    self.finish()
+                self.write('%s'%(async_result,))
+                self.finish()
         
         if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
