@@ -50,7 +50,7 @@ define("apps", type=str, default="", help="app servers多台应用服务器请�
 define("port", type=int, default=12345, help="监听端口")
 define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
-define("gearman_srv", type=str, default="127.0.0.1:3306", help="设置Gearman服务器地址")
+define("gearman_srv", type=str, default=None, help="设置Gearman服务器地址")
 parse_command_line()
 
 if options.conn is None:
