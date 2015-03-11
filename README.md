@@ -32,7 +32,7 @@ location / {<br /><br />
     index  index.html index.htm;<br /><br />
     proxy_set_header Host $host;<br /><br />
     proxy_set_header X-Real-IP  $remote_addr;<br /><br />
-    proxy_set_header __NODELAY__  1;<br /><br />
+    proxy_set_header \_\_NODELAY\_\_  1;<br /><br />
     proxy_pass http://test;<br /><br />
 }
 <br /><br />
