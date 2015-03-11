@@ -146,8 +146,14 @@ class RouterHandler(tornado.web.RequestHandler):
     #确保列队中的请求被删除，并添加处理header信息标记
     def on_finish(self):
         global pool,conn_count,sync,async
-        conn_count -= 1
+        if self.start:
+            conn_count -= 1
+            self.start = False
         self.add_header('__PROXY__', 'Trouter %s'%(version,))
+        
+    #Called at the beginning of a request before  `get`/`post`/etc
+    def prepare(self):
+        conn_count += 1
     
     @tornado.web.asynchronous
     def get(self,params):
@@ -183,10 +189,7 @@ class RouterHandler(tornado.web.RequestHandler):
             asynclist = urllib.unquote(asynclist)
         if isinstance(async_result, basestring):
             async_result = urllib.unquote(async_result)
-        
-        if self.start:
-            conn_count += 1
-        
+
         #黑名单,直接范围503
         if blacklist:
             blacklist = blacklist.split(',')
