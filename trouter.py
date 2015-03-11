@@ -4,8 +4,6 @@
 使用tornado进行路由转发控制，将请求通过该服务进行转发。
 当短时间出现大量的请求超过阈值的情况，服务会将过载部分的请求缓存在zeroMQ中，以便能缓慢的释放请求到应用服务器。
 保障服务的正常运行。
-
-支持gearman模式调度，但是效率未必比tornao高呢
 """
 import tornado.httpserver
 import tornado.ioloop
