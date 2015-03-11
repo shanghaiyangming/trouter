@@ -123,6 +123,9 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("after response the pool number is:%d"%(pool,))
         self.logging.info("after response the async pool number is:%d"%(async,))
 
+        if response.error and response.code==599:
+            return tornado.ioloop.IOLoop.instance().add_callback(self.router)
+
         if not self.is_async:
             try:
                 self.set_status(response.code)   
