@@ -39,6 +39,7 @@ from conf.log import logging
 
 from tornado.escape import utf8, _unicode
 from tornado.options import define, options, parse_command_line
+from tornado.httpclient import AsyncHTTPClient
  
 """代码版本"""
 version = '0.2'
@@ -96,11 +97,10 @@ pool = 0
 sync = 0
 async = 0
 
-#采用curl的方式进行处理，速度更快
-tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
-http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=2*threshold)
-http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=2*threshold)
-
+#采用curl的方式进行处理，速度更快,莫名的异常退出
+#AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+http_client_async = AsyncHTTPClient(max_clients=2*threshold)
+http_client_sync = AsyncHTTPClient(max_clients=2*threshold)
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging,http_client_sync,http_client_async):
@@ -133,7 +133,7 @@ class RouterHandler(tornado.web.RequestHandler):
             if not response.error:
                 self.write(response.body)
             else:
-                self.logging.debug(u"%s,%s"%(response.error,response.body))
+                self.logging.error(u"%s,%s"%(response.error,response.body))
             try:
                 self.finish()
             except Exception,e:
@@ -216,7 +216,8 @@ class RouterHandler(tornado.web.RequestHandler):
         
         #如果达到处理上限，那么停止接受连接，返回信息结束
         if conn_count > max_conn:
-            self.set_status(500) 
+            self.set_status(500)
+            self.logging.error("The maximum number of connections limit is reached")
             self.write('{"err":"The maximum number of connections limit is reached"}')
             return self.finish()
         
@@ -239,11 +240,6 @@ class RouterHandler(tornado.web.RequestHandler):
     def construct_request(self, server_request):
         self.logging.info(app_servers)
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
-        
-        self.logging.info(url)
-        self.logging.info(server_request)
-        self.logging.info(server_request.body)
-        
         if not hasattr(server_request,'body') or server_request.body=='':
             server_request.body = None
 
@@ -252,9 +248,6 @@ class RouterHandler(tornado.web.RequestHandler):
             method=server_request.method,
             headers=server_request.headers,
             body=server_request.body,
-            connect_timeout = 5.0,
-            request_timeout = 15.0,
-            max_redirects = 3,
             allow_nonstandard_methods = True
         )
     
