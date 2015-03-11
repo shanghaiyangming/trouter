@@ -153,6 +153,7 @@ class RouterHandler(tornado.web.RequestHandler):
         
     #Called at the beginning of a request before  `get`/`post`/etc
     def prepare(self):
+        global conn_count
         conn_count += 1
     
     @tornado.web.asynchronous
