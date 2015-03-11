@@ -21,12 +21,19 @@ __logging__ 错误等级，默认是info 可选参数debug|info|warning|error|no
 
 Nginx转发设置：
 <br /><br />
-接受参数方式
-<br /><br />
 upstream test {<br /><br />
     proxy_set_header \_\_NODELAY\_\_  1;<br /><br />
     server 192.168.56.1:8000;<br /><br />
     server 192.168.56.1:8000;<br /><br />
+}<br /><br />
+
+location / {<br /><br />
+    root   html;<br /><br />
+    index  index.html index.htm;<br /><br />
+    proxy_set_header Host $host;<br /><br />
+    proxy_set_header X-Real-IP  $remote_addr;<br /><br />
+    proxy_set_header __NODELAY__  1;<br /><br />
+    proxy_pass http://test;<br /><br />
 }
 <br /><br />
 
