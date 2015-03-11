@@ -252,9 +252,9 @@ class RouterHandler(tornado.web.RequestHandler):
             method=server_request.method,
             headers=server_request.headers,
             body=server_request.body,
-            connect_timeout = 3.0,
-            request_timeout = 10.0,
-            max_redirects = 5,
+            connect_timeout = 5.0,
+            request_timeout = 15.0,
+            max_redirects = 3,
             allow_nonstandard_methods = True
         )
     
