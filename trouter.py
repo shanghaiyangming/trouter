@@ -41,7 +41,7 @@ from tornado.escape import utf8, _unicode
 from tornado.options import define, options, parse_command_line
  
 """代码版本"""
-version = '0.0.1'
+version = '0.2'
 
 define("conn", type=int, default=5000, help="最大连接数")
 define("apps", type=str, default="", help="app servers多台应用服务器请使用英文逗号分隔")
