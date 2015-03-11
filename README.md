@@ -24,8 +24,9 @@ Nginx转发设置：
 接受参数方式
 <br /><br />
 upstream test {<br /><br />
+    proxy_set_header \_\_NODELAY\_\_  1;<br /><br />
     server 192.168.56.1:8000;<br /><br />
-    server 192.168.56.1:8000?\_\_NODELAY\_\_=1;<br /><br />
+    server 192.168.56.1:8000;<br /><br />
 }
 <br /><br />
 
