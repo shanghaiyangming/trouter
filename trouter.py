@@ -171,7 +171,13 @@ class RouterHandler(tornado.web.RequestHandler):
         if not async_result:
             async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
         
-        async_result = urllib.unquote(async_result)
+        #如果代码进行了urlencode编码，则自动进行解码
+        if isinstance(blacklist, basestring):
+            blacklist = urllib.unquote(blacklist)
+        if isinstance(asynclist, basestring):
+            asynclist = urllib.unquote(asynclist)
+        if isinstance(async_result, basestring):
+            async_result = urllib.unquote(async_result)
         
         if self.start:
             conn_count += 1
