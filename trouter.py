@@ -96,8 +96,10 @@ pool = 0
 sync = 0
 async = 0
 
-http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=100*max_conn)
-http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=100*max_conn)
+#采用curl的方式进行处理，速度更快
+tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+http_client_async = tornado.httpclient.AsyncHTTPClient(max_clients=threshold)
+http_client_sync = tornado.httpclient.AsyncHTTPClient(max_clients=threshold)
 
 
 class RouterHandler(tornado.web.RequestHandler):
