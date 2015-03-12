@@ -27,6 +27,7 @@ import pickle
 import socket
 import optparse
 import urllib
+import platform
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -40,6 +41,7 @@ from conf.log import logging
 from tornado.escape import utf8, _unicode
 from tornado.options import define, options, parse_command_line
 from tornado.httpclient import AsyncHTTPClient
+from tornado.httputil import HTTPHeaders
  
 """代码版本"""
 version = '0.2'
@@ -100,8 +102,10 @@ pool = 0
 sync = 0
 async = 0
 
-#采用curl的方式进行处理，速度更快,莫名的异常退出
-#AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+if platform.system() != 'Windows':
+    #采用curl的方式进行处理，速度更快，兼容性更好
+    AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+    
 http_client_async = AsyncHTTPClient(max_clients=2*threshold)
 http_client_sync = AsyncHTTPClient(max_clients=2*threshold)
 
@@ -137,6 +141,15 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.set_status(500)
             
             if not response.error:
+                if isinstance(response.headers,HTTPHeaders):
+                    for k,v in response.headers.get_all():
+                        self.set_header(k,_unicode(v))
+                elif isinstance(response.headers,dict):
+                    for k,v in dict:
+                        self.set_header(k,_unicode(v))
+                else:
+                    self.logging.debug(response.headers)
+                    
                 self.write(response.body)
             else:
                 self.logging.error(u"%s,%s"%(response.error,response.body))
@@ -259,6 +272,7 @@ class RouterHandler(tornado.web.RequestHandler):
             method=server_request.method,
             headers=server_request.headers,
             body=server_request.body,
+            follow_redirects = False,#不自动执行重定向，返回给用户浏览器处理
             request_timeout = request_timeout,
             allow_nonstandard_methods = True
         )
