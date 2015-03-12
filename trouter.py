@@ -49,7 +49,10 @@ define("apps", type=str, default="", help="app servers多台应用服务器请�
 define("port", type=int, default=12345, help="监听端口")
 define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
+define("request_timeout", type=int, default=300, help="客户端请求最大超时时间，默认300秒")
 parse_command_line()
+
+request_timeout = float(options.request_timeout)
 
 if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -149,12 +152,13 @@ class RouterHandler(tornado.web.RequestHandler):
         if self.start:
             conn_count -= 1
             self.start = False
-        self.add_header('__PROXY__', 'Trouter %s'%(version,))
+            self.logging.info("conn number is:%d"%(conn_count,))
         
     #Called at the beginning of a request before  `get`/`post`/etc
     def prepare(self):
         global conn_count
         conn_count += 1
+        self.logging.info("conn number is %d"%(conn_count,))
     
     @tornado.web.asynchronous
     def get(self,params):
@@ -255,6 +259,7 @@ class RouterHandler(tornado.web.RequestHandler):
             method=server_request.method,
             headers=server_request.headers,
             body=server_request.body,
+            request_timeout = request_timeout,
             allow_nonstandard_methods = True
         )
     
