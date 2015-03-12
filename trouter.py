@@ -125,11 +125,13 @@ class RouterHandler(tornado.web.RequestHandler):
     def set_headers(self, response):
         try:
             if isinstance(response.headers,HTTPHeaders):
+                self.logging.info("headers type is HTTPHeaders")
                 for k,v in response.headers.get_all():
                     if k!='Transfer-Encoding':
                         self.logging.info("%s:%s"%(k,v))
                         self.set_header(k,_unicode(v))
             elif isinstance(response.headers,dict):
+                self.logging.info("headers type is dict")
                 for k,v in response.headers:
                     if k!='Transfer-Encoding':
                         self.logging.info("%s:%s"%(k,v))
@@ -162,7 +164,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.set_headers(response)
 
             if not response.error or response.body !='':
-                self.logging.info(response.body)
+                self.logging.info("response.body execute")
                 self.write(response.body)
             else:
                 self.logging.error(u"%s,%s"%(response.error,response.body))
