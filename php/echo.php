@@ -1,5 +1,6 @@
 <?php
 #sleep(1);
+header("test: ok");
 var_dump($_GET);
 var_dump($_POST);
 echo "hello world!";

@@ -140,7 +140,7 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.logging.error(e)
                 self.set_status(500)
             
-            if not response.error:
+            try:
                 if isinstance(response.headers,HTTPHeaders):
                     for k,v in response.headers.get_all():
                         self.set_header(k,_unicode(v))
@@ -148,8 +148,11 @@ class RouterHandler(tornado.web.RequestHandler):
                     for k,v in dict:
                         self.set_header(k,_unicode(v))
                 else:
-                    self.logging.debug(response.headers)
-                    
+                    self.logging.debug(response.headers)    
+            except Exception,e:
+                self.logging.error(e)
+            
+            if not response.error: 
                 self.write(response.body)
             else:
                 self.logging.error(u"%s,%s"%(response.error,response.body))
