@@ -122,6 +122,24 @@ class RouterHandler(tornado.web.RequestHandler):
         self.security()
         self.logging.info("initialize")
     
+    def set_headers(self, response):
+        try:
+            if isinstance(response.headers,HTTPHeaders):
+                for k,v in response.headers.get_all():
+                    if k!='Transfer-Encoding':
+                        self.logging.info("%s:%s"%(k,v))
+                        self.set_header(k,_unicode(v))
+            elif isinstance(response.headers,dict):
+                for k,v in response.headers:
+                    if k!='Transfer-Encoding':
+                        self.logging.info("%s:%s"%(k,v))
+                        self.set_header(k,_unicode(v))
+            else:
+                self.logging.debug(response.headers)    
+        except Exception,e:
+            self.logging.error(e)
+    
+    
     def on_response(self, response):
         global pool,conn_count,sync,async
         pool -= 1
@@ -129,7 +147,8 @@ class RouterHandler(tornado.web.RequestHandler):
             async -= 1
         self.logging.info("after response the pool number is:%d"%(pool,))
         self.logging.info("after response the async pool number is:%d"%(async,))
-
+        self.logging.info("response code:%d"%(response.code,))
+        
         if response.error and response.code==599:
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
 
@@ -140,22 +159,14 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.logging.error(e)
                 self.set_status(500)
             
-            try:
-                if isinstance(response.headers,HTTPHeaders):
-                    for k,v in response.headers.get_all():
-                        self.set_header(k,_unicode(v))
-                elif isinstance(response.headers,dict):
-                    for k,v in dict:
-                        self.set_header(k,_unicode(v))
-                else:
-                    self.logging.debug(response.headers)    
-            except Exception,e:
-                self.logging.error(e)
-            
-            if not response.error: 
+            self.set_headers(response)
+
+            if not response.error or response.body !='':
+                self.logging.info(response.body)
                 self.write(response.body)
             else:
                 self.logging.error(u"%s,%s"%(response.error,response.body))
+            
             try:
                 self.finish()
             except Exception,e:
@@ -171,6 +182,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.info("conn number is:%d"%(conn_count,))
         
     #Called at the beginning of a request before  `get`/`post`/etc
+    @tornado.web.asynchronous
     def prepare(self):
         global conn_count
         conn_count += 1
