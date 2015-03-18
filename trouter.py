@@ -134,6 +134,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("initialize")
     
     def set_headers(self, response):
+        global pool,conn_count,sync,async
         try:
             if isinstance(response.headers,HTTPHeaders):
                 self.logging.info("headers type is HTTPHeaders")
@@ -150,6 +151,9 @@ class RouterHandler(tornado.web.RequestHandler):
                 if k!='Transfer-Encoding':
                     self.logging.info("%s:%s"%(k,v))
                     self.set_header(k,_unicode(v))
+            
+            #添加trouter信息，便于debug
+            self.set_header('trouter','version:%s,current pool:%d,current conn count:%d'%(version,pool,conn_count))
         except Exception,e:
             self.logging.error(e)
     
