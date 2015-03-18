@@ -167,6 +167,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("after response the async pool number is:%d"%(async,))
         self.logging.info("response code:%d"%(response.code,))
         
+        #检测到599，重试
         if response.error and response.code==599:
             return tornado.ioloop.IOLoop.instance().add_callback(self.router)
 
