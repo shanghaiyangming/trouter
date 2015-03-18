@@ -28,6 +28,7 @@ import socket
 import optparse
 import urllib
 import platform
+import zmq
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -52,9 +53,13 @@ define("port", type=int, default=12345, help="监听端口")
 define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
 define("request_timeout", type=int, default=300, help="客户端请求最大超时时间，默认300秒")
+define("enable_zmq", type=int, default=0, help="开启ZeroMQ模式,0为关闭1为开启")
+define("zmq_device", type=str, default="", help="zmq device服务地址,tcp://127.0.0.1:5559")
 parse_command_line()
 
 request_timeout = float(options.request_timeout)
+enable_zmq = options.enable_zmq
+zmq_device = options.zmq_device
 
 if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -108,6 +113,12 @@ if platform.system() != 'Windows':
     
 http_client_async = AsyncHTTPClient(max_clients=2*threshold)
 http_client_sync = AsyncHTTPClient(max_clients=2*threshold)
+
+#如果设置了zeroMQ那么连接zeroMQ服务器
+if enable_zmq > 0 and zmq_device != '':
+    context = zmq.Context()
+    zmq_socket = context.socket(zmq.PUSH)
+    zmq_socket.connect(zmq_device)
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging,http_client_sync,http_client_async):
@@ -248,6 +259,9 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.is_async = True
                 self.write('%s'%(async_result,))
                 self.finish()
+                #如果设置了zeroMQ队列的话，放到zmq列队中结束请求
+                if enable_zmq > 0 and zmq_device != '':
+                    return zmq_socket.send_pyobj(self.construct_request(self.request))
         
         if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
