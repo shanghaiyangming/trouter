@@ -8,19 +8,26 @@ import zmq
 import time
 import sys
 import random
+import logging
 from  multiprocessing import Process
+from tornado.options import define, options, parse_command_line
+from tornado.httpclient import HTTPClient,AsyncHTTPClient
 
+define("frontend_port", type=int, default=55555, help="前端监听端口")
+define("backend_port", type=int, default=55556, help="后端监听端口")
+parse_command_line()
 
-http_async_client = AsyncHTTPClient(max_clients=100)
+frontend_port = options.frontend_port
+backend_port = options.backend_port
+logging.info("frontend_port:%d"%(frontend_port,))
+logging.info("backend_port:%d"%(backend_port,))
 
-def zmq_device(frontend_port,backend_port):
+def zmq_device():
     try:
         context = zmq.Context(1)
-        # Socket facing clients
         frontend = context.socket(zmq.PULL)
         frontend.bind("tcp://*:%d"%(frontend_port,))
         
-        # Socket facing services
         backend = context.socket(zmq.PUSH)
         backend.bind("tcp://*:%d"%(backend_port,))
 
@@ -32,27 +39,23 @@ def zmq_device(frontend_port,backend_port):
         frontend.close()
         backend.close()
         context.term()
-        
-def on_response(response):
-    if response.error:
-        logging.error(response.error)
-    else:
-        logging.info(response.code)
-       
+      
 def http_client_worker():
     context = zmq.Context()
     socket = context.socket(zmq.PULL)
-    socket.connect("tcp://127.0.0.1:%d" % backend_port)
-    
+    socket.connect("tcp://127.0.0.1:%d" % (backend_port,))
+    http_client = HTTPClient()
     while True:
         request = socket.recv_pyobj()
         try:
-            http_async_client.fetch(request,callback=on_response)
+            response = http_client.fetch(request)
+            logging.info(response.code)
+            if response.error:
+                logging.error(response.error)
         except Exception,e:
             logging.error(e)
-        
 
-if __name__ == "__main__":
-    Process(target=zmq_device, args=(5555,5556)).start()
-    for work_num in range(10):
-        Process(target=worker, args=(work_num,)).start()
+if __name__ == '__main__':
+    Process(target=zmq_device).start()
+    for work_num in xrange(100):
+        Process(target=http_client_worker).start()
