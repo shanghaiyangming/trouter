@@ -10,10 +10,13 @@ import sys
 import random
 import logging
 import tornado
+import pickle
 
 from  multiprocessing import Process
 from tornado.options import define, options, parse_command_line
 from tornado.httpclient import HTTPClient,AsyncHTTPClient,HTTPRequest
+from tornado.httputil import HTTPHeaders,HTTPServerRequest
+from tornado.httpserver import HTTPRequest
 
 define("backend_port", type=int, default=55556, help="后端监听端口")
 parse_command_line()
@@ -26,9 +29,10 @@ def http_client_worker():
     socket = context.socket(zmq.PULL)
     socket.connect("tcp://127.0.0.1:%d" % (backend_port,))
     while True:
-        request = socket.recv_pyobj()
+        http_client = HTTPClient()
         try:
-            http_client = HTTPClient()
+            request = socket.recv_pyobj()
+            logging.info(request)
             response = http_client.fetch(request)
             logging.info(response.code)
             if response.error:

@@ -266,7 +266,8 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.finish()
                 #如果设置了zeroMQ队列的话，放到zmq列队中结束请求
                 if enable_zmq > 0 and zmq_device != '':
-                    return zmq_socket.send_pyobj(self.construct_request(self.request))
+                    self.logging.info("zmq_socket send_pyobj")
+                    return zmq_socket.send_pyobj(self.construct_request(self.request,True))
         
         if pool > self.threshold or (async > self.threshold - self.sync_threshold and self.is_async):
             self.start = False
@@ -298,12 +299,19 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.error(e)
             self.finish()
     
-    def construct_request(self, server_request):
+    def construct_request(self, server_request,is_pickle = False):
         self.logging.info(app_servers)
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
         if not hasattr(server_request,'body') or server_request.body=='':
             server_request.body = None
-
+        
+        if is_pickle:
+            dict_headers = {}
+            for k,v in server_request.headers.get_all():
+                dict_headers[k] = v
+            server_request.headers = dict_headers
+            self.logging.info(server_request.headers)
+        
         return tornado.httpclient.HTTPRequest(
             url,
             method=server_request.method,

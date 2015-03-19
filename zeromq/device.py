@@ -27,10 +27,13 @@ def zmq_device():
         context = zmq.Context(1)
         frontend = context.socket(zmq.PULL)
         frontend.bind("tcp://*:%d"%(frontend_port,))
-        
+    
         backend = context.socket(zmq.PUSH)
         backend.bind("tcp://*:%d"%(backend_port,))
+    except Exception, e:
+        logging.error(e)
 
+    try:
         zmq.device(zmq.STREAMER, frontend, backend)
     except Exception, e:
         logging.error(e)
