@@ -9,7 +9,7 @@ Trouter<br /><br />
 保障服务的正常运行。<br />
 <br /><br />
 ##启动命令示例：
-python trouter.py --conn=1000 --apps=127.0.0.1:9999 --port=8000 --threshold=5 --sync_threshold=4
+python trouter.py --conn=1000 --apps=127.0.0.1:9999 --port=8000 --threshold=5 --sync_threshold=4  --enable_zmq=1 --zmq_device=tcp://127.0.0.1:55555
 <br /><br />
 ##参数说明：<br /><br />
 __conn__ 最大连接数，默认是5000<br /><br />
