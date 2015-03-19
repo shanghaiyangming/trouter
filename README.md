@@ -1,9 +1,9 @@
 #Trouter
 ##项目名称：<br />
 Tornado Router<br /><br />
-##简称：<br />
+##简称：
 Trouter<br /><br />
-##功能介绍：<br /><br />
+##功能介绍：
 使用tornado进行路由转发控制。<br /><br />
 当短时间出现大量的请求超过阈值的情况，服务会将过载部分的请求缓存在zeroMQ/Redis中，以便能缓慢的释放请求到应用服务器。
 保障服务的正常运行。<br />
@@ -28,7 +28,6 @@ __zmq_device__ zeroMQ设备地址，例如：tcp://127.0.0.1:5559<br /><br />
 启动zeromq/worker.py 根据你后台应用服务器的处理能力，启动相应数量的实例<br /><br />
 
 ##Nginx转发设置：
-<br /><br />
 upstream test {<br /><br />
     proxy_set_header \_\_NODELAY\_\_  1;<br /><br />
     server 192.168.56.1:8000;<br /><br />
