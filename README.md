@@ -21,6 +21,12 @@ __logging__ 错误等级，默认是info 可选参数debug|info|warning|error|no
 __enable_zmq__ 是否开启zmq存储请求，默认是0 设置大于0的整数，表示开启<br /><br />
 __zmq_device__ zeroMQ设备地址，例如：tcp://127.0.0.1:5559<br /><br />
 
+#0mq工作设置
+启动zeromq/device.py 默认监听55555 55556端口<br /><br />
+
+#http client worker设置
+启动zeromq/worker.py 根据你后台应用服务器的处理能力，启动相应数量的实例<br /><br />
+
 ##Nginx转发设置：
 <br /><br />
 upstream test {<br /><br />
