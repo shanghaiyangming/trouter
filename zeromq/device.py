@@ -11,9 +11,7 @@ import random
 import logging
 import tornado
 
-from  multiprocessing import Process
 from tornado.options import define, options, parse_command_line
-from tornado.httpclient import HTTPClient,AsyncHTTPClient,HTTPRequest
 
 define("frontend_port", type=int, default=55555, help="前端监听端口")
 define("backend_port", type=int, default=55556, help="后端监听端口")
@@ -41,25 +39,7 @@ def zmq_device():
         frontend.close()
         backend.close()
         context.term()
-      
-def http_client_worker():
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
-    socket.connect("tcp://127.0.0.1:%d" % (backend_port,))
-    http_client = HTTPClient()
-    while True:
-        request = socket.recv_pyobj()
-        try:
-            response = http_client.fetch(request)
-            logging.info(response.code)
-            if response.error:
-                logging.error(response.error)
-        except Exception,e:
-            logging.error(e)
 
 if __name__ == '__main__':
-    Process(target=zmq_device).start()
-    process_list = []
-    for work_num in xrange(1):
-        process_list.append(Process(target=http_client_worker).start())
+    zmq_device()
 
