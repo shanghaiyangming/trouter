@@ -54,7 +54,7 @@ define("threshold", type=int, default=500, help="进行操作等待的阈值")
 define("sync_threshold", type=int, default=300, help="保障同步操作的数量")
 define("request_timeout", type=int, default=300, help="客户端请求最大超时时间，默认300秒")
 define("enable_zmq", type=int, default=0, help="开启ZeroMQ模式,0为关闭1为开启")
-define("zmq_device", type=str, default="", help="zmq device服务地址,tcp://127.0.0.1:5559")
+define("zmq_device", type=str, default="", help="zmq device服务地址,tcp://127.0.0.1:55555")
 parse_command_line()
 
 request_timeout = float(options.request_timeout)

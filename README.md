@@ -27,7 +27,7 @@ __threshold__ 阈值，默认是500 当达到阈值的时候，自动阻塞请�
 __sync_threshold__ 同步请求阈值，默认300 保证在转发中有300个用于同步转发<br /><br />
 __logging__ 错误等级，默认是info 可选参数debug|info|warning|error|none<br /><br />
 __enable_zmq__ 是否开启zmq存储请求，默认是0 设置大于0的整数，表示开启<br /><br />
-__zmq_device__ zeroMQ设备地址，例如：tcp://127.0.0.1:5559<br /><br />
+__zmq_device__ zeroMQ设备地址，例如：tcp://127.0.0.1:55555<br /><br />
 
 #0mq工作设置
 启动zeromq/device.py 默认监听55555 55556端口<br /><br />
