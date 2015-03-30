@@ -29,6 +29,7 @@ import optparse
 import urllib
 import platform
 import zmq
+import md5
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -234,6 +235,7 @@ class RouterHandler(tornado.web.RequestHandler):
         if not async_result:
             async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
         
+        
         #如果代码进行了urlencode编码，则自动进行解码
         if isinstance(blacklist, basestring):
             blacklist = urllib.unquote(blacklist)
@@ -258,6 +260,11 @@ class RouterHandler(tornado.web.RequestHandler):
             if self.match_list(asynclist):
                 nodelay = True
                 async_filter = True
+                
+        #开启debug模式时关闭异步操作    
+        enable_debug_mode = self.get_query_argument('__DEBUG__',default=False)
+        if enable_debug_mode:
+            nodelay = False
                 
         if nodelay:
             if not self._finished:
@@ -324,7 +331,15 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
-        pass
+        session_id = self.get_cookie('PHPSESSID')
+        ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
+        user_agent = self.request.headers.get('User-Agent', '')
+        if session_id != None:
+            pass
+        if user_agent != '':
+            user_agent = hashlib.md5(user_agent).hexdigest()
+            
+        
     
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
     def match_list(self, match_list):
@@ -345,10 +360,6 @@ class RouterHandler(tornado.web.RequestHandler):
         if server_request.body != '' and re.match(match,_unicode(server_request.body)):
             return True
         return False  
-    
-    def hash_request(self):
-        self.hash_request = obj_hash(self.request)
-        return self.hash_request
 
 
 
