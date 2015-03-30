@@ -262,7 +262,7 @@ class RouterHandler(tornado.web.RequestHandler):
                 async_filter = True
                 
         #开启debug模式时关闭异步操作    
-        enable_debug_mode = self.get_query_argument('__DEBUG__',default=False)
+        enable_debug_mode = self.get_query_argument('__ENABLE_DEBUG__',default=False)
         if enable_debug_mode:
             nodelay = False
                 
@@ -352,7 +352,9 @@ class RouterHandler(tornado.web.RequestHandler):
             del arguments['__ASYNCLIST__']
         if '__ASYNC_RESULT__' in arguments:
             del arguments['__ASYNC_RESULT__']
-
+        if '__ENABLE_DEBUG__' in arguments:
+            del arguments['__ENABLE_DEBUG__']
+            
         match = "|".join(match_list)
         for k in arguments.keys():
             if re.match(match,_unicode(" ".join(arguments[k]))):
