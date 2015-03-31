@@ -12,7 +12,7 @@ import logging
 import tornado
 import pickle
 
-from  multiprocessing import Process
+from multiprocessing import Process
 from tornado.options import define, options, parse_command_line
 from tornado.httpclient import HTTPClient,AsyncHTTPClient,HTTPRequest
 from tornado.httputil import HTTPHeaders,HTTPServerRequest

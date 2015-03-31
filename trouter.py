@@ -324,6 +324,7 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
+        
         pass
     
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
