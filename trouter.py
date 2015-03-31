@@ -29,6 +29,7 @@ import optparse
 import urllib
 import platform
 import zmq
+import md5
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -55,11 +56,13 @@ define("sync_threshold", type=int, default=300, help="保障同步操作的数�
 define("request_timeout", type=int, default=300, help="客户端请求最大超时时间，默认300秒")
 define("enable_zmq", type=int, default=0, help="开启ZeroMQ模式,0为关闭1为开启")
 define("zmq_device", type=str, default="", help="zmq device服务地址,tcp://127.0.0.1:55555")
+define("security_device", type=str, default="", help="security device服务地址,tcp://127.0.0.1:55557")
 parse_command_line()
 
 request_timeout = float(options.request_timeout)
 enable_zmq = options.enable_zmq
 zmq_device = options.zmq_device
+security_device = options.security_device
 
 if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -119,6 +122,12 @@ if enable_zmq > 0 and zmq_device != '':
     context = zmq.Context()
     zmq_socket = context.socket(zmq.PUSH)
     zmq_socket.connect(zmq_device)
+    
+#如果设置了zeroMQ security_device 那么连接zeroMQ security_device服务器
+if security_device != '':
+    context = zmq.Context()
+    security_socket = context.socket(zmq.PUSH)
+    security_socket.connect(security_device)
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging,http_client_sync,http_client_async):
@@ -234,6 +243,7 @@ class RouterHandler(tornado.web.RequestHandler):
         if not async_result:
             async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
         
+        
         #如果代码进行了urlencode编码，则自动进行解码
         if isinstance(blacklist, basestring):
             blacklist = urllib.unquote(blacklist)
@@ -258,6 +268,11 @@ class RouterHandler(tornado.web.RequestHandler):
             if self.match_list(asynclist):
                 nodelay = True
                 async_filter = True
+                
+        #开启debug模式时关闭异步操作    
+        enable_debug_mode = self.get_query_argument('__ENABLE_DEBUG__',default=False)
+        if enable_debug_mode:
+            nodelay = False
                 
         if nodelay:
             if not self._finished:
@@ -324,8 +339,33 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
+<<<<<<< HEAD
         
         pass
+=======
+        if security_device != '':
+            session_id = self.get_cookie('PHPSESSID', '')
+            remote_ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
+            user_agent = self.request.headers.get('User-Agent', '')
+            request_uri = self.request.uri
+            http_host = self.request.headers.get('Host', '')
+            
+            #if user_agent != '':
+            #    user_agent = hashlib.md5(user_agent).hexdigest()
+                
+            security_info = {}
+            security_info['http_host'] = http_host
+            security_info['request_uri'] = request_uri
+            security_info['session_id'] = session_id
+            security_info['remore_ip'] = remote_ip
+            security_info['user_agent'] = user_agent
+            self.logging.info("security_info:%s"%(str(security_info)))
+            security_socket.send_pyobj(security_info)
+        else:
+            self.logging.info("turn off security features")
+        return True
+        
+>>>>>>> 26b5f0fb50c5decd7703e154788daffb000f058c
     
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
     def match_list(self, match_list):
@@ -338,7 +378,9 @@ class RouterHandler(tornado.web.RequestHandler):
             del arguments['__ASYNCLIST__']
         if '__ASYNC_RESULT__' in arguments:
             del arguments['__ASYNC_RESULT__']
-
+        if '__ENABLE_DEBUG__' in arguments:
+            del arguments['__ENABLE_DEBUG__']
+            
         match = "|".join(match_list)
         for k in arguments.keys():
             if re.match(match,_unicode(" ".join(arguments[k]))):
@@ -346,10 +388,6 @@ class RouterHandler(tornado.web.RequestHandler):
         if server_request.body != '' and re.match(match,_unicode(server_request.body)):
             return True
         return False  
-    
-    def hash_request(self):
-        self.hash_request = obj_hash(self.request)
-        return self.hash_request
 
 
 
