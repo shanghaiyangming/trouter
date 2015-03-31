@@ -56,11 +56,13 @@ define("sync_threshold", type=int, default=300, help="保障同步操作的数�
 define("request_timeout", type=int, default=300, help="客户端请求最大超时时间，默认300秒")
 define("enable_zmq", type=int, default=0, help="开启ZeroMQ模式,0为关闭1为开启")
 define("zmq_device", type=str, default="", help="zmq device服务地址,tcp://127.0.0.1:55555")
+define("security_device", type=str, default="", help="security device服务地址,tcp://127.0.0.1:55557")
 parse_command_line()
 
 request_timeout = float(options.request_timeout)
 enable_zmq = options.enable_zmq
 zmq_device = options.zmq_device
+security_device = options.security_device
 
 if options.conn is None:
     logging.error('请设定最大连接数，默认10000')
@@ -120,6 +122,12 @@ if enable_zmq > 0 and zmq_device != '':
     context = zmq.Context()
     zmq_socket = context.socket(zmq.PUSH)
     zmq_socket.connect(zmq_device)
+    
+#如果设置了zeroMQ security_device 那么连接zeroMQ security_device服务器
+if security_device != '':
+    context = zmq.Context()
+    security_socket = context.socket(zmq.PUSH)
+    security_socket.connect(security_device)
 
 class RouterHandler(tornado.web.RequestHandler):
     def initialize(self, redis_client,logging,http_client_sync,http_client_async):
@@ -331,14 +339,29 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
-        session_id = self.get_cookie('PHPSESSID')
-        ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
-        user_agent = self.request.headers.get('User-Agent', '')
-        if session_id != None:
-            pass
-        if user_agent != '':
-            user_agent = hashlib.md5(user_agent).hexdigest()
+        if security_device != '':
+            session_id = self.get_cookie('PHPSESSID', None)
+            remote_ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
+            user_agent = self.request.headers.get('User-Agent', '')
+            request_uri = self.request.uri
+            http_host = self.request.headers.get('Host', '')
             
+            if session_id != None:
+                pass
+            if user_agent != '':
+                user_agent = hashlib.md5(user_agent).hexdigest()
+                
+            security_info = {}
+            security_info['http_host'] = http_host
+            security_info['request_uri'] = request_uri
+            security_info['session_id'] = session_id
+            security_info['remore_ip'] = remote_ip
+            security_info['user_agent'] = user_agent
+            self.logging.info("security_info:%s"%(str(security_info)))
+            security_socket.send_pyobj(security_info)
+        else:
+            self.logging.info("Does not turn on security features")
+        return True
         
     
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
