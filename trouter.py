@@ -339,10 +339,6 @@ class RouterHandler(tornado.web.RequestHandler):
     
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
-<<<<<<< HEAD
-        
-        pass
-=======
         if security_device != '':
             session_id = self.get_cookie('PHPSESSID', '')
             remote_ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
@@ -364,8 +360,6 @@ class RouterHandler(tornado.web.RequestHandler):
         else:
             self.logging.info("turn off security features")
         return True
-        
->>>>>>> 26b5f0fb50c5decd7703e154788daffb000f058c
     
     #在body、url、POST GET中匹配字符串,匹配,匹配的性能有待优化 
     def match_list(self, match_list):
