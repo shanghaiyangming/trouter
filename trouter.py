@@ -340,14 +340,12 @@ class RouterHandler(tornado.web.RequestHandler):
     #进行必要的安全检查,拦截有问题操作,考虑使用贝叶斯算法屏蔽有问题的访问
     def security(self):
         if security_device != '':
-            session_id = self.get_cookie('PHPSESSID', None)
+            session_id = self.get_cookie('PHPSESSID', '')
             remote_ip = self.request.headers.get('X-Real-Ip', self.request.remote_ip)
             user_agent = self.request.headers.get('User-Agent', '')
             request_uri = self.request.uri
             http_host = self.request.headers.get('Host', '')
             
-            if session_id != None:
-                pass
             if user_agent != '':
                 user_agent = hashlib.md5(user_agent).hexdigest()
                 
