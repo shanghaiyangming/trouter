@@ -46,7 +46,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import HTTPHeaders
  
 """代码版本"""
-version = '0.3'
+version = '0.4'
 
 define("conn", type=int, default=5000, help="最大连接数")
 define("apps", type=str, default="", help="app servers多台应用服务器请使用英文逗号分隔")
@@ -141,6 +141,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.is_async = False
         self.security()
         self.logging.info("initialize")
+        self.timer = time.time()
     
     def set_headers(self, response):
         global pool,conn_count,sync,async
@@ -162,6 +163,7 @@ class RouterHandler(tornado.web.RequestHandler):
                     self.set_header(k,_unicode(v))
             
             #添加trouter信息，便于debug
+            self.set_header('script_execute_time','%d ms'%(1000*(time.time()-self.timer),))
             self.set_header('trouter','version:%s,current pool:%d,current conn count:%d'%(version,pool,conn_count))
         except Exception,e:
             self.logging.error(e)
