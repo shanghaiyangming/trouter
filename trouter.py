@@ -358,7 +358,7 @@ class RouterHandler(tornado.web.RequestHandler):
             self.logging.info("security_info:%s"%(str(security_info)))
             security_socket.send_pyobj(security_info)
         else:
-            self.logging.info("Does not turn on security features")
+            self.logging.info("turn off security features")
         return True
         
     
