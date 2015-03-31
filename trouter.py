@@ -141,7 +141,6 @@ class RouterHandler(tornado.web.RequestHandler):
         self.is_async = False
         self.security()
         self.logging.info("initialize")
-        self.timer = time.time()
     
     def set_headers(self, response):
         global pool,conn_count,sync,async
@@ -300,6 +299,8 @@ class RouterHandler(tornado.web.RequestHandler):
             self.write('{"err":"The maximum number of connections limit is reached"}')
             return self.finish()
         
+        # 后台转发脚本计算时间开始
+        self.timer = time.time()
         try:
             pool += 1
             if self.is_async:
