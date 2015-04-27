@@ -349,9 +349,6 @@ class RouterHandler(tornado.web.RequestHandler):
             request_uri = self.request.uri
             http_host = self.request.headers.get('Host', '')
             
-            #if user_agent != '':
-            #    user_agent = hashlib.md5(user_agent).hexdigest()
-                
             security_info = {}
             security_info['http_host'] = http_host
             security_info['request_uri'] = request_uri
