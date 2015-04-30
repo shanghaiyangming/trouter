@@ -97,7 +97,7 @@ if options.sync_threshold is None:
 else:
     sync_threshold = options.sync_threshold
     
-if threshold <= sync_threshold:
+if threshold < sync_threshold:
     logging.error('阈值必须大于同步请求阈值')
     sys.exit(2)
     
