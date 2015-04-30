@@ -325,6 +325,8 @@ class RouterHandler(tornado.web.RequestHandler):
         if not hasattr(server_request,'body') or server_request.body=='':
             server_request.body = None
         
+        self.logging.debug(server_request)
+        
         if is_pickle:
             dict_headers = {}
             for k,v in server_request.headers.get_all():
