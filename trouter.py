@@ -179,9 +179,11 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("after response the pool number is:%d"%(pool,))
         self.logging.info("after response the async pool number is:%d"%(async,))
         self.logging.info("response code:%d"%(response.code,))
+        self.logging.info(response)
         
         #检测到599，重试
         if response.error and response.code==599:
+            self.logging.debug(response) 
             if self.retry_times > 0:
                 self.logging.info('retry limit is %d'%(self.retry_times,))
                 self.retry_times -= 1
@@ -311,12 +313,15 @@ class RouterHandler(tornado.web.RequestHandler):
         # 后台转发脚本计算时间开始
         self.timer = time.time()
         try:
+            self.logging.debug(self.request)
+            request = self.construct_request(self.request)
+            self.logging.debug(request)
             pool += 1
             if self.is_async:
                 async += 1
-                self.client_async.fetch(self.construct_request(self.request),callback=self.on_response)
+                self.client_async.fetch(request,callback=self.on_response)
             else:
-                self.client_sync.fetch(self.construct_request(self.request),callback=self.on_response)
+                self.client_sync.fetch(request,callback=self.on_response)
         except Exception,e:
             pool -= 1
             if self.is_async:
@@ -329,6 +334,7 @@ class RouterHandler(tornado.web.RequestHandler):
     def construct_request(self, server_request,is_pickle = False):
         self.logging.info(app_servers)
         url = "%s://%s%s"%(self.request.protocol,str(random_list(app_servers)),self.request.uri)
+        self.logging.info(url)
         if not hasattr(server_request,'body') or server_request.body=='':
             server_request.body = None
         
