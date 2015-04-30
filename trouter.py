@@ -143,6 +143,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.is_async = False
         self.security()
         self.logging.info("initialize")
+        self.retry_times = 3
     
     def set_headers(self, response):
         global pool,conn_count,sync,async
@@ -181,7 +182,13 @@ class RouterHandler(tornado.web.RequestHandler):
         
         #检测到599，重试
         if response.error and response.code==599:
-            return tornado.ioloop.IOLoop.instance().add_callback(self.router)
+            if self.retry_times > 0:
+                self.logging.info('retry limit is %d'%(self.retry_times,))
+                self.retry_times -= 1
+                return tornado.ioloop.IOLoop.instance().add_callback(self.router)
+            else:
+                self.logging.info('retry limit is 0')
+                return False
 
         if not self.is_async:
             try:

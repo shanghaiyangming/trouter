@@ -1,1 +1,2 @@
 python device.py
+pause

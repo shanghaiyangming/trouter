@@ -1,1 +1,2 @@
 python worker.py
+pause
