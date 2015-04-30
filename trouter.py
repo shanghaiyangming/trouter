@@ -29,7 +29,6 @@ import optparse
 import urllib
 import platform
 import zmq
-import md5
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -347,6 +346,9 @@ class RouterHandler(tornado.web.RequestHandler):
             server_request.headers = dict_headers
             self.logging.info(server_request.headers)
         
+        if server_request.body == None and server_request.method=='POST':
+            server_request.method = 'GET'
+            
         return tornado.httpclient.HTTPRequest(
             url,
             method=server_request.method,
