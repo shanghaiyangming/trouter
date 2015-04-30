@@ -45,7 +45,7 @@ from tornado.options import define, options, parse_command_line
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import HTTPHeaders
 
-from collections import Counter
+#from collections import Counter
  
 """代码版本"""
 version = '0.4'
