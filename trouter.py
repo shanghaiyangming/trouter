@@ -180,7 +180,7 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info("response code:%d"%(response.code,))
         self.logging.info(response)
         
-        #检测到599，重试
+        #检测到599，重试3次
         if response.error and response.code==599:
             self.logging.debug(response) 
             if self.retry_times > 0:
