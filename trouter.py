@@ -55,7 +55,7 @@ from tornado.httputil import HTTPHeaders
 #from collections import Counter
  
 """代码版本"""
-version = '0.4'
+version = '0.5'
 
 define("conn", type=int, default=5000, help="最大连接数")
 define("apps", type=str, default="", help="app servers多台应用服务器请使用英文逗号分隔")
