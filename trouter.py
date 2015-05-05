@@ -4,6 +4,14 @@
 使用tornado进行路由转发控制，将请求通过该服务进行转发。
 当短时间出现大量的请求超过阈值的情况，服务会将过载部分的请求缓存在zeroMQ中，以便能缓慢的释放请求到应用服务器。
 保障服务的正常运行。
+
+版本、扩展与依赖：
+python 2.6+
+tornado4.1
+pymongo2.8
+redis(暂未使用)
+zmq
+
 """
 import tornado.httpserver
 import tornado.ioloop
