@@ -296,6 +296,7 @@ class RouterHandler(tornado.web.RequestHandler):
         if nodelay:
             if not self._finished:
                 self.is_async = True
+                self.set_header('Content-Type','text/javascript')
                 self.write('%s'%(async_result,))
                 self.finish()
                 #如果设置了zeroMQ队列的话，放到zmq列队中结束请求
