@@ -261,6 +261,8 @@ class RouterHandler(tornado.web.RequestHandler):
         async_result = self.request.headers.get('__ASYNC_RESULT__',default=False)
         if not async_result:
             async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
+            
+        jsonpcallback = self.get_query_argument('jsonpcallback',default='')
         
         
         #如果代码进行了urlencode编码，则自动进行解码
@@ -296,8 +298,15 @@ class RouterHandler(tornado.web.RequestHandler):
         if nodelay:
             if not self._finished:
                 self.is_async = True
+                self.set_status(200)
                 self.set_header('Content-Type','text/javascript')
-                self.write('%s'%(async_result,))
+                self.set_header('Expires','Thu, 19 Nov 1981 08:52:00 GMT')
+                self.set_header('Pragma','no-cache')
+                
+                if jsonpcallback!='':
+                    self.write('%s(%s)'%(jsonpcallback,async_result))
+                else:
+                    self.write('%s'%(async_result,))
                 self.finish()
                 #如果设置了zeroMQ队列的话，放到zmq列队中结束请求
                 if enable_zmq > 0 and zmq_device != '':
