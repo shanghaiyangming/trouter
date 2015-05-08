@@ -261,8 +261,16 @@ class RouterHandler(tornado.web.RequestHandler):
         async_result = self.request.headers.get('__ASYNC_RESULT__',default=False)
         if not async_result:
             async_result = self.get_query_argument('__ASYNC_RESULT__',default='{"ok":1}')
+        
+        content_type = self.request.headers.get('__CONTENT_TYPE__',default='')
+        if not content_type:
+            content_type = self.get_query_argument('__CONTENT_TYPE__',default='')
+        
+        jsonp_callback_varname = self.request.headers.get('__JSONP_CALLBACK_VARNAME__',default='jsonpcallback')
+        if not jsonp_callback_varname:
+            jsonp_callback_varname = self.get_query_argument('__JSONP_CALLBACK_VARNAME__',default='jsonpcallback')
             
-        jsonpcallback = self.get_query_argument('jsonpcallback',default='')
+        jsonpcallback = self.get_query_argument('%s'%(jsonp_callback_varname,),default='')
         
         
         #如果代码进行了urlencode编码，则自动进行解码
@@ -299,15 +307,27 @@ class RouterHandler(tornado.web.RequestHandler):
             if not self._finished:
                 self.is_async = True
                 self.set_status(200)
-                self.set_header('Content-Type','text/javascript')
+                
+                #禁止缓存
                 self.set_header('Expires','Thu, 19 Nov 1981 08:52:00 GMT')
                 self.set_header('Pragma','no-cache')
                 
-                if jsonpcallback!='':
-                    self.write('%s(%s)'%(jsonpcallback,async_result))
+                #默认判断，对于json格式的处理，默认jsonpcallback兼容jquery调用方法，如需定制请在__JSONP_CALLBACK_VARNAME__指定
+                if(self.is_json(async_result)):
+                    self.set_header('Content-Type','text/javascript')
+                    if jsonpcallback!='':
+                        self.write('%s(%s)'%(jsonpcallback,async_result))
+                    else:
+                        self.write('%s'%(async_result,))
                 else:
                     self.write('%s'%(async_result,))
+                
+                #可以强行执行content-type  
+                if(content_type!=''):
+                    self.set_header('Content-Type',content_type)
+                
                 self.finish()
+                
                 #如果设置了zeroMQ队列的话，放到zmq列队中结束请求
                 if enable_zmq > 0 and zmq_device != '':
                     self.logging.info("zmq_socket send_pyobj")
@@ -419,7 +439,16 @@ class RouterHandler(tornado.web.RequestHandler):
                 return True
         if server_request.body != '' and re.match(match,_unicode(server_request.body)):
             return True
-        return False  
+        return False
+    
+    #判断字符串是否为有效的json字符串
+    def is_json(self,json_str):
+        try:
+            json_object = json.loads(json_str)
+        except ValueError,e:
+            return False
+        else:
+            return True
 
 
 
