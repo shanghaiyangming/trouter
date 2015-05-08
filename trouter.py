@@ -55,7 +55,7 @@ from tornado.httputil import HTTPHeaders
 #from collections import Counter
  
 """代码版本"""
-version = '0.5'
+version = '0.6'
 
 define("conn", type=int, default=5000, help="最大连接数")
 define("apps", type=str, default="", help="app servers多台应用服务器请使用英文逗号分隔")
@@ -432,6 +432,10 @@ class RouterHandler(tornado.web.RequestHandler):
             del arguments['__ASYNC_RESULT__']
         if '__ENABLE_DEBUG__' in arguments:
             del arguments['__ENABLE_DEBUG__']
+        if '__CONTENT_TYPE__' in arguments:
+            del arguments['__CONTENT_TYPE__']
+        if '__JSONP_CALLBACK_VARNAME__' in arguments:
+            del arguments['__JSONP_CALLBACK_VARNAME__']
             
         match = "|".join(match_list)
         for k in arguments.keys():
