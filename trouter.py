@@ -197,6 +197,11 @@ class RouterHandler(tornado.web.RequestHandler):
                 return tornado.ioloop.IOLoop.instance().add_callback(self.router)
             else:
                 self.logging.info('retry limit is 0')
+                #重试结束后
+                try:
+                    self.finish()
+                except Exception,e:
+                    self.logging.error(e)
                 return False
 
         if not self.is_async:
