@@ -74,7 +74,7 @@ zmq_device = options.zmq_device
 security_device = options.security_device
 
 if options.conn is None:
-    logging.error('请设定最大连接数，默认10000')
+    logging.error('请设定最大连接数，默认5000')
     sys.exit(2)
 else:
     max_conn = options.conn
