@@ -123,8 +123,8 @@ if platform.system() != 'Windows':
     #采用curl的方式进行处理，速度更快，兼容性更好
     AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
     
-http_client_async = AsyncHTTPClient(max_clients=2*threshold)
-http_client_sync = AsyncHTTPClient(max_clients=2*threshold)
+http_client_async = AsyncHTTPClient(max_clients=3*threshold)
+http_client_sync = AsyncHTTPClient(max_clients=3*threshold)
 
 #如果设置了zeroMQ那么连接zeroMQ服务器
 if enable_zmq > 0 and zmq_device != '':
