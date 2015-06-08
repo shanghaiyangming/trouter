@@ -300,8 +300,10 @@ class RouterHandler(tornado.web.RequestHandler):
         if asynclist:
             asynclist = asynclist.split(',')
             if self.match_list(asynclist):
+                self.logging.info("enable aysnc list")
                 nodelay = True
                 async_filter = True
+            
                 
         #开启debug模式时关闭异步操作    
         enable_debug_mode = self.get_query_argument('__ENABLE_DEBUG__',default=False)
@@ -439,13 +441,18 @@ class RouterHandler(tornado.web.RequestHandler):
             del arguments['__JSONP_CALLBACK_VARNAME__']
             
         match = "|".join(match_list)
+        self.logging.info(match)
+        p = re.compile(r'%s'%(match,),re.I|re.M)
         for k in arguments.keys():
-            if re.match(match,_unicode(" ".join(arguments[k]))):
+            self.logging.info(_unicode(" ".join(arguments[k])))
+            if p.search(_unicode(" ".join(arguments[k]))):
                 return True
         
         if hasattr(self.request,'body'):
-            if re.match(match,_unicode(self.request.body)):
+            self.logging.info(_unicode(self.request.body))
+            if p.search(_unicode(self.request.body)):
                 return True
+        
         return False
     
     #判断字符串是否为有效的json字符串
