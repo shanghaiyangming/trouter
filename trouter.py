@@ -313,10 +313,6 @@ class RouterHandler(tornado.web.RequestHandler):
                 self.is_async = True
                 self.set_status(200)
                 
-                #禁止缓存
-                self.set_header('Expires','Thu, 19 Nov 1981 08:52:00 GMT')
-                self.set_header('Pragma','no-cache')
-                
                 #默认判断，对于json格式的处理，默认jsonpcallback兼容jquery调用方法，如需定制请在__JSONP_CALLBACK_VARNAME__指定
                 if(self.is_json(async_result)):
                     self.set_header('Content-Type','text/javascript')
@@ -446,8 +442,10 @@ class RouterHandler(tornado.web.RequestHandler):
         for k in arguments.keys():
             if re.match(match,_unicode(" ".join(arguments[k]))):
                 return True
-        if server_request.body != '' and re.match(match,_unicode(server_request.body)):
-            return True
+        
+        if hasattr(self.request,'body'):
+            if re.match(match,_unicode(self.request.body)):
+                return True
         return False
     
     #判断字符串是否为有效的json字符串
