@@ -298,7 +298,7 @@ class RouterHandler(tornado.web.RequestHandler):
         #对于包含这些字符的请求，自动转化为异步请求
         async_filter = False
         
-        asynclist = "template,location,view,unsubscribe"
+        #asynclist = "template,location,view,unsubscribe"
         if asynclist:
             asynclist = asynclist.split(',')
             if self.match_list(asynclist):
@@ -452,7 +452,8 @@ class RouterHandler(tornado.web.RequestHandler):
         
         if hasattr(self.request,'body'):
             self.logging.info(_unicode(self.request.body))
-            if p.search(_unicode(self.request.body)):
+            body = re.sub("\r|\n","",_unicode(self.request.body))
+            if p.search(body):
                 return True
         
         return False
