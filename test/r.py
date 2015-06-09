@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import re
-s = """<xml>EVENT 
+s = """<xml>EVENT wer<a></a>
                ASDASD
-               location</xml>"""
+               <!CDATA<location>></xml>"""
 s = re.sub("\r|\n","",s);
 print s
-match_list = "EVENT.*location,bbb"
+match_list = ['EVENT.*LOCATION','bbb']
 match = "|".join(match_list)
-p = re.compile(r"()|()",re.I|re.M)
+print match
+p = re.compile(r"%s"%(match,),re.I|re.M)
 print p.search(s)
