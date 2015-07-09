@@ -36,6 +36,14 @@ __security_device__ zeroMQ security device 设备地址，例如：tcp://127.0.0
 #http client worker设置
 启动zeromq/worker.py 根据你后台应用服务器的处理能力，启动相应数量的实例<br /><br />
 
+#是否可以指定device和worker的端口呢？当然可以！<br /><br />
+使用方法：<br /><br />
+zeromq/device.py --frontend_port=10000 --backend_port=20000<br /><br />
+zeromq/worker.py --backend_port=20000<br /><br />
+
+frontend_port指的是队列监听的端口<br /><br />
+backend_port指的是worker监听的端口<br /><br />
+
 #没有队列怎么办？
 采用队列可以提高性能，但是没有？也可以工作！启动enable_zmq不设置即可，默认是0噢~<br /><br />
 同样是实现上面的全部功能，只是性能……确实要差一点，没办法你懂的，处理的太多trouter也会累的嘛！
