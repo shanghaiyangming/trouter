@@ -25,6 +25,7 @@ backend_port = options.backend_port
 logging.info("backend_port:%d"%(backend_port,))
 
 def sleep(diff_time):
+    diff_time = int(diff_time)
     if diff_time >= 15:
         time.sleep(120)
     elif diff_time >= 10:
