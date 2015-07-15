@@ -19,23 +19,32 @@ from tornado.httputil import HTTPHeaders,HTTPServerRequest
 from tornado.httpserver import HTTPRequest
 
 define("backend_port", type=int, default=55556, help="后端监听端口")
-define("check_mongo_load", type=int, default=0, help="是否检测mongodb负载")
-define("mongo_host", type=str, default="127.0.0.1", help="mongodb主机地址")
-define("mongo_port", type=int, default=27017, help="mongodb主机端口")
-
 parse_command_line()
 
 backend_port = options.backend_port
 logging.info("backend_port:%d"%(backend_port,))
 
+def sleep(diff_time):
+    if diff_time >= 15:
+        time.sleep(120)
+    elif diff_time >= 10:
+        time.sleep(60)
+    elif diff_time >= 5:
+        time.sleep(30)
+    elif diff_time >= 3:
+        time.sleep(10)
+    else:
+        pass
+    return True
+
 def http_client_worker():
+    diff_time = 0
     context = zmq.Context()
     socket = context.socket(zmq.PULL)
     socket.connect("tcp://127.0.0.1:%d" % (backend_port,))
     while True:
-        if not isMongoDBLoadGood():
-            time.sleep(10)
-        
+        sleep(diff_time)
+        start_time = time.time()
         http_client = HTTPClient()
         try:
             request = socket.recv_pyobj()
@@ -47,24 +56,9 @@ def http_client_worker():
         except Exception,e:
             logging.error(e)
         finally:
+            end_time = time.time()
+            diff_time = end_time - start_time
             http_client.close()
-
-def isMongoDBLoadGood():
-    if options.check_mongo_load==1:
-        if random.randint(0,9)==1:
-            waitingForLockNumber = 0
-            client = MongoClient(options.mongo_host, options.mongo_port)
-            db = client[database]
-            ops = db.current_op()
-            for op in ops[u'inprog']:
-                if op.has_key(u'ns') and op[u'ns'] not in exclude:
-                    if op.has_key(u'waitingForLock') and op[u'waitingForLock']:
-                        waitingForLockNumber += 1
-            if waitingForLockNumber > 30:
-                return False
-    return True
-        
-
 
 if __name__ == '__main__':
     http_client_worker()
