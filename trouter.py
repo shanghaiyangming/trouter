@@ -297,6 +297,8 @@ class RouterHandler(tornado.web.RequestHandler):
         
         #对于包含这些字符的请求，自动转化为异步请求
         async_filter = False
+        
+        #asynclist = "template,event.*location,view,unsubscribe"
         if asynclist:
             asynclist = asynclist.split(',')
             if self.match_list(asynclist):
@@ -444,9 +446,8 @@ class RouterHandler(tornado.web.RequestHandler):
         self.logging.info(match)
         p = re.compile(r'%s'%(match,),re.I|re.M)
         for k in arguments.keys():
-            arguments_string = _unicode(" ".join(arguments[k]))
-            arguments_string = re.sub("\r|\n","",arguments_string)
-            if p.search(arguments_string):
+            self.logging.info(_unicode(" ".join(arguments[k])))
+            if p.search(_unicode(" ".join(arguments[k]))):
                 return True
         
         if hasattr(self.request,'body'):
